@@ -1,0 +1,3 @@
+# The scripts themselves use only the Python standard library.
+# legendary is the Epic Games client that phase 1 shells out to.
+legendary-gl>=0.20.34

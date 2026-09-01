@@ -1,0 +1,25 @@
+# Everything below is rebuilt from scratch by the scripts, or is personal to
+# whoever ran them. Nothing here belongs in the repository.
+
+# Generated reports and exports
+out/
+
+# Memoised HTTP responses + the dump of your own Epic library
+cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+
+# Editors and OS clutter
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
