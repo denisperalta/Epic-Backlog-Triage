@@ -1,5 +1,6 @@
 """Render out/games.json into a single self-contained HTML report."""
 import json, os, datetime
+from collections import Counter
 
 from steamlib import use_utf8_stdout
 
@@ -139,6 +140,11 @@ tbody tr:hover{background:var(--surface-2)}
   border-radius:5px;padding:2px 7px;color:var(--chip-ink);font-variant-numeric:tabular-nums}
 .mode{font-size:11px;color:var(--muted);white-space:nowrap;letter-spacing:.02em}
 .dash{color:var(--faint)}
+.tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;border-radius:4px;padding:1px 5px;margin-left:6px;
+  vertical-align:2px;white-space:nowrap;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--muted)}
+.tag.gone{color:var(--b4);border-color:var(--b4);background:transparent}
 .empty{padding:52px 20px;text-align:center;color:var(--muted)}
 .foot{display:block;margin-top:18px;font-size:12.5px;color:var(--faint);line-height:1.65;max-width:96ch}
 .foot code{font-family:"IBM Plex Mono",monospace;font-size:11.5px}
@@ -163,6 +169,15 @@ tbody tr:hover{background:var(--surface-2)}
     <div class="row1">
       <input type="search" id="q" placeholder="Search title, genre or developer&hellip;" aria-label="Search">
       <select id="genre" aria-label="Filter by genre">__GENRES__</select>
+      <select id="status" aria-label="Filter by Steam listing">
+        <option value="">Any Steam status</option>
+        <option value="listed">On Steam now</option>
+        <option value="delisted">Delisted from Steam</option>
+        <option value="not-on-steam">Never on Steam</option>
+        <option value="duplicate">Duplicate entry</option>
+        <option value="unreleased">Not released yet</option>
+        <option value="unknown">Unidentified</option>
+      </select>
       <select id="sort" aria-label="Sort by">
         <option value="sort_score|-1">Confidence, high first</option>
         <option value="title|1">Name, A to Z</option>
@@ -211,6 +226,9 @@ __HOURS_TH__        <th data-k="year" data-num="1">Year <span class="ar"></span>
   var STEPS = [0, 100, 500, 2000, 10000, 50000];
   var HAS_HOURS = __HAS_HOURS__;
   var ENT = {"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;"};
+  // Why a row has no Steam numbers, in the row itself rather than a footnote.
+  var TAG = {delisted:"Delisted", "not-on-steam":"Never on Steam",
+             duplicate:"Duplicate", unreleased:"Unreleased", unknown:"No match"};
 
   GAMES.forEach(function(g){
     var d = (g.release_date || "").match(/(19|20)\d{2}/);
@@ -239,7 +257,13 @@ __HOURS_TH__        <th data-k="year" data-num="1">Year <span class="ar"></span>
     if (q && g._hay.indexOf(q) === -1) return false;
     var gen = $("genre").value;
     if (gen && (g.genres || []).indexOf(gen) === -1) return false;
-    if ((g.reviews || 0) < STEPS[+$("minr").value]) return false;
+    var st = $("status").value;
+    if (st && (g.steam_status || "unknown") !== st) return false;
+    // The review floor is a browsing floor, and it would hide every row that has
+    // no reviews to count - exactly the rows someone picking "never on Steam" or
+    // "duplicate entry" asked to see. Asking for a status by name lifts it for
+    // those rows only; rows that do have reviews are still filtered normally.
+    if ((g.reviews || 0) < STEPS[+$("minr").value] && !(st && !g.reviews)) return false;
     if ($("sp").checked && !g.singleplayer) return false;
     if ($("co").checked && !g.coop) return false;
     if ($("pad").checked && !g.controller) return false;
@@ -270,14 +294,31 @@ __HOURS_TH__        <th data-k="year" data-num="1">Year <span class="ar"></span>
 
     body.innerHTML = rows.map(function(g, i){
       var b = g.band;
+      var why = g.steam_status === "delisted"
+        ? "pulled from sale on Steam - the reviews it earned still count"
+        : g.steam_status === "duplicate"
+        ? "same Steam page as " + esc(g.duplicate_of || "another entry")
+        : g.steam_status === "not-on-steam" ? "never sold on Steam"
+        : g.steam_status === "unreleased" ? "not released yet"
+        : "no Steam listing found";
       var rate = g.rating == null
-        ? '<span class="dash">no Steam listing</span>'
+        ? '<span class="dash">' + why + '</span>'
         : '<div class="top"><span class="pct t' + b + '">' + g.rating.toFixed(2) + '%</span>' +
           '<span class="desc">' + esc(g.review_desc) + '</span></div>' +
           '<div class="track"><div class="fill f' + b + '" style="width:' + g.rating + '%"></div></div>';
       var name = g.steam_url
         ? '<a href="' + g.steam_url + '" target="_blank" rel="noopener">' + esc(g.title) + '</a>'
         : '<a>' + esc(g.title) + '</a>';
+      var tag = TAG[g.steam_status];
+      if (tag) {
+        // Say where a match came from: a title Steam's own search cannot return was
+        // identified through PCGamingWiki, which is a weaker source than a store hit
+        // and can pick the wrong game where a name is reused across releases.
+        var tip = why + (g.steam_source === "pcgw"
+          ? " (matched as " + esc(g.matched_name) + " via PCGamingWiki)" : "");
+        name += '<span class="tag' + (g.steam_status === "delisted" ? " gone" : "") +
+                '" title="' + tip + '">' + tag + '</span>';
+      }
       return '<tr>' +
         '<td class="num rank">' + (i + 1) + '</td>' +
         '<td class="name">' + name +
@@ -346,7 +387,7 @@ __HOURS_TH__        <th data-k="year" data-num="1">Year <span class="ar"></span>
     if (p.length === 2) applySort(p[0], +p[1]);
   });
 
-  ["q", "genre", "sp", "co", "pad"].forEach(function(id){
+  ["q", "genre", "status", "sp", "co", "pad"].forEach(function(id){
     $(id).addEventListener("input", render);
   });
   $("minr").addEventListener("input", function(){
@@ -354,7 +395,8 @@ __HOURS_TH__        <th data-k="year" data-num="1">Year <span class="ar"></span>
     render();
   });
   $("reset").addEventListener("click", function(){
-    $("q").value = ""; $("genre").value = ""; $("minr").value = 1;
+    $("q").value = ""; $("genre").value = ""; $("status").value = "";
+    $("minr").value = 1;
     $("minrv").textContent = "100";
     $("sp").checked = $("co").checked = $("pad").checked = false;
     render();
@@ -395,6 +437,7 @@ def build():
     with open(src, encoding="utf-8") as fh:
         games = json.load(fh)
 
+    verdicts = Counter(g.get("steam_status") or "unknown" for g in games)
     rated = [g for g in games if g.get("reviews")]
     solid = [g for g in rated if g["reviews"] >= 500]
     great = [g for g in solid if (g.get("sort_score") or 0) >= 90]
@@ -409,9 +452,8 @@ def build():
     if hours:
         tiles.append(("Short enough", str(sum(1 for h in hours if h <= 12)),
                       "12 hours or less to finish"))
-    else:
-        tiles.append(("Unlisted on Steam", str(len(games) - len(rated)),
-                      "Epic exclusives and delistings"))
+    tiles.append(("Delisted on Steam", str(verdicts["delisted"]),
+                  "pulled from sale, still yours"))
 
     stats = "".join(
         '<div class="tile"><div class="k">%s</div><div class="v">%s</div>'
@@ -421,7 +463,6 @@ def build():
     opts = '<option value="">All genres</option>' + "".join(
         '<option value="%s">%s</option>' % (g, g) for g in genres)
 
-    unmatched = len(games) - len(rated)
     stamp = datetime.date.today().strftime("%d %B %Y")
     playtime = ("Playtime is HowLongToBeat&rsquo;s main-story figure. " if hours else
                 "Playtime is not shown: HowLongToBeat now requires a browser session "
@@ -429,12 +470,16 @@ def build():
     footer = (
         "Steam ratings, review counts, genres, Metacritic scores and player modes come from "
         "Valve&rsquo;s own <code>appreviews</code> and <code>appdetails</code> endpoints, fetched "
-        "%s. %s%d of %d titles have no Steam listing &mdash; Epic exclusives, launcher entries "
-        "and delisted games &mdash; and sink to the bottom rather than disappearing. Confidence "
-        "score is the Wilson 95%% lower bound on the share of positive reviews: it starts at the "
-        "raw rating and pulls downward the fewer reviews there are, so 100%% from 14 reviews "
-        "lands well below 98%% from 300,000."
-        % (stamp, playtime, unmatched, len(games)))
+        "%s. %sSteam&rsquo;s search only answers for games it currently sells, so anything it "
+        "cannot find is looked up on PCGamingWiki instead: %d titles here were <b>delisted</b> "
+        "&mdash; pulled from sale but still carrying their reviews, which are scored and ranked "
+        "like any other &mdash; %d were <b>never on Steam</b>, %d are <b>duplicate</b> Epic "
+        "entries for a game already in the list, and %d could not be identified either way. "
+        "Confidence score is the Wilson 95%% lower bound on the share of positive reviews: it "
+        "starts at the raw rating and pulls downward the fewer reviews there are, so 100%% from "
+        "14 reviews lands well below 98%% from 300,000."
+        % (stamp, playtime, verdicts["delisted"], verdicts["not-on-steam"],
+           verdicts["duplicate"], verdicts["unknown"]))
 
     hours_th = ('        <th data-k="hltb_main" data-num="1">Hours <span class="ar"></span></th>\n'
                 if hours else "")
@@ -453,6 +498,11 @@ def build():
         fh.write(html)
     print("wrote %s  (%.0f KB, %d games, %d rated, %d genres)"
           % (path, len(html) / 1024.0, len(games), len(rated), len(genres)))
+    # The headline answer, for anyone who runs this from run.bat and reads the
+    # console rather than opening the page.
+    print("      %d delisted on Steam, %d never on Steam, %d duplicate entries, "
+          "%d unidentified" % (verdicts["delisted"], verdicts["not-on-steam"],
+                               verdicts["duplicate"], verdicts["unknown"]))
 
 
 if __name__ == "__main__":

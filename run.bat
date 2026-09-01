@@ -3,8 +3,8 @@ rem ---------------------------------------------------------------------------
 rem  Epic Backlog Triage - one-click setup and run.
 rem
 rem  Double-click this file. It finds Python, builds a private virtual
-rem  environment, installs legendary, walks you through the Epic login the
-rem  first time, then produces out\report.html and opens it.
+rem  environment, installs legendary, checks itself over, walks you through
+rem  the Epic login the first time, then produces out\report.html and opens it.
 rem
 rem  Any arguments are passed through to epic_steam.py, so   run.bat --refresh
 rem  re-queries your Epic library instead of reusing the cached copy.
@@ -32,31 +32,39 @@ if not errorlevel 1 set "PY=python"
 if not defined PY goto :no_python
 
 :have_python
-echo [1/6] Python 3.8+ found
+echo [1/7] Python 3.8+ found
 if not exist "epic_steam.py" goto :wrong_folder
 
 rem ------------------------------------------- 2. private virtual environment
 set "VPY=.venv\Scripts\python.exe"
 if exist "%VPY%" goto :have_venv
-echo [2/6] creating the .venv virtual environment ...
+echo [2/7] creating the .venv virtual environment ...
 %PY% -m venv .venv
 if errorlevel 1 goto :venv_failed
 
 :have_venv
-echo [2/6] virtual environment ready
+echo [2/7] virtual environment ready
 
 rem -------------------------------------------------------- 3. dependencies
 "%VPY%" -c "import legendary" >nul 2>&1
 if not errorlevel 1 goto :have_deps
-echo [3/6] installing legendary (needs the internet, once) ...
+echo [3/7] installing legendary (needs the internet, once) ...
 "%VPY%" -m pip install --upgrade pip --quiet
 "%VPY%" -m pip install -r requirements.txt --quiet
 if errorlevel 1 goto :pip_failed
 
 :have_deps
-echo [3/6] legendary installed
+echo [3/7] legendary installed
 
-rem ------------------------------------------------------- 4. Epic account
+rem -------------------------------------------------------- 4. self-check
+rem Fast and offline. Running it here means a half-applied edit or a damaged
+rem checkout is caught before the Epic login and an hour of Steam fetching,
+rem rather than after. Silent unless something is actually wrong.
+"%VPY%" -m unittest discover -b >nul 2>&1
+if errorlevel 1 goto :tests_failed
+echo [4/7] scripts self-checked
+
+rem ------------------------------------------------------- 5. Epic account
 call :check_auth
 if not errorlevel 1 goto :have_auth
 
@@ -77,11 +85,11 @@ call :check_auth
 if errorlevel 1 goto :auth_failed
 
 :have_auth
-"%VPY%" -c "from legendary.core import LegendaryCore; u = LegendaryCore().lgd.userdata or {}; print('[4/6] Epic account connected: ' + u.get('displayName', '?'))"
+"%VPY%" -c "from legendary.core import LegendaryCore; u = LegendaryCore().lgd.userdata or {}; print('[5/7] Epic account connected: ' + u.get('displayName', '?'))"
 
-rem ----------------------------------------------------------- 5. the work
+rem ----------------------------------------------------------- 6. the work
 echo.
-echo [5/6] reading your library and fetching Steam data ...
+echo [6/7] reading your library and fetching Steam data ...
 echo       The first run takes roughly an hour - Steam is rate limited, so
 echo       requests are throttled and every reply is cached. Every run after
 echo       this one finishes in seconds. Leave it going.
@@ -90,13 +98,13 @@ echo.
 if errorlevel 1 goto :run_failed
 
 echo.
-echo [5/6] retrying the titles that did not match ...
+echo [6/7] retrying unmatched titles, and settling which are delisted ...
 "%VPY%" second_pass.py
 if errorlevel 1 goto :run_failed
 
-rem --------------------------------------------------------- 6. the report
+rem --------------------------------------------------------- 7. the report
 echo.
-echo [6/6] rendering the report ...
+echo [7/7] rendering the report ...
 "%VPY%" build_report.py
 if errorlevel 1 goto :run_failed
 
@@ -134,6 +142,12 @@ goto :failed
 echo   Still not signed in to Epic, so there is no library to read.
 echo   Try again by hand to see what went wrong:
 echo       .venv\Scripts\legendary.exe auth
+goto :failed
+
+:tests_failed
+echo   The built-in self-check failed, so something in the scripts is wrong.
+echo   Nothing was fetched. Run it again to see what broke:
+echo       .venv\Scripts\python.exe -m unittest discover
 goto :failed
 
 :run_failed

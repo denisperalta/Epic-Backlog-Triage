@@ -2,15 +2,15 @@
 
 Phases, each independently cached under cache/ so reruns are cheap:
   1 library   legendary list --json  -> real games only
-  2 match     title -> Steam appid   (official GetAppList, SearchApps fallback)
+  2 match     title -> Steam appid   (storefront SearchApps; see steam_index)
   3 steam     appreviews + appdetails per matched appid
   4 hltb      HowLongToBeat playtime (third-party, best effort)
   5 emit      out/games.json, out/games.csv
 """
 import csv, json, os, re, subprocess, sys, time, urllib.parse
 
-from steamlib import (CACHE, cached_json, cache_path, normalise, use_utf8_stdout,
-                      wilson_lower)
+from steamlib import (CACHE, cached_json, cache_path, normalise, steam_status,
+                      use_utf8_stdout, wilson_lower)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
@@ -174,6 +174,45 @@ def appreviews(appid):
     return d.get("query_summary")
 
 
+def apply_steam(g, appid, data, source="search"):
+    """Copy one resolved Steam listing onto a library entry.
+
+    Shared with second_pass so a title recovered on the second attempt carries
+    exactly the same fields, from the same source of truth, as one matched first
+    time round.
+    """
+    summary = appreviews(appid) or {}
+    pos = summary.get("total_positive") or 0
+    neg = summary.get("total_negative") or 0
+    tot = summary.get("total_reviews") or 0
+    cats = {c.get("description") for c in data.get("categories") or []}
+
+    g.update(
+        steam_appid=appid,
+        matched_name=data.get("name"),
+        steam_status=steam_status(data),
+        steam_source=source,
+        genres=[x.get("description") for x in data.get("genres") or [] if x.get("description")],
+        rating=round(100.0 * pos / tot, 2) if tot else None,
+        reviews=tot,
+        positive=pos,
+        negative=neg,
+        sort_score=round(wilson_lower(pos, tot), 2) if tot else None,
+        review_desc=summary.get("review_score_desc") or "",
+        metacritic=(data.get("metacritic") or {}).get("score"),
+        release_date=(data.get("release_date") or {}).get("date") or "",
+        coming_soon=bool((data.get("release_date") or {}).get("coming_soon")),
+        developer=", ".join(data.get("developers") or []) or g.get("epic_developer", ""),
+        publisher=", ".join(data.get("publishers") or []),
+        singleplayer="Single-player" in cats,
+        multiplayer=any("Multi-player" in c or "PvP" in c for c in cats),
+        coop=any("Co-op" in c for c in cats),
+        controller="Full controller support" in cats,
+        steam_url="https://store.steampowered.com/app/%d/" % appid,
+    )
+    return g
+
+
 def enrich(games, exact, loose):
     total = len(games)
     for i, g in enumerate(games, 1):
@@ -189,40 +228,16 @@ def enrich(games, exact, loose):
             break
 
         if not chosen:
-            g.update(steam_appid=None, matched_name=None)
+            # Not "no Steam listing" yet - only that the storefront search, which
+            # answers for games currently on sale, did not offer one. second_pass
+            # tells apart delisted, never-there and simply not found.
+            g.update(steam_appid=None, matched_name=None, steam_status="unknown")
             log(f"  [{i}/{total}] {g['title'][:52]:<52} -- no Steam match")
             continue
 
-        appid, data = chosen
-        summary = appreviews(appid) or {}
-        pos = summary.get("total_positive") or 0
-        neg = summary.get("total_negative") or 0
-        tot = summary.get("total_reviews") or 0
-        cats = {c.get("description") for c in data.get("categories") or []}
-
-        g.update(
-            steam_appid=appid,
-            matched_name=data.get("name"),
-            genres=[x.get("description") for x in data.get("genres") or [] if x.get("description")],
-            rating=round(100.0 * pos / tot, 2) if tot else None,
-            reviews=tot,
-            positive=pos,
-            negative=neg,
-            sort_score=round(wilson_lower(pos, tot), 2) if tot else None,
-            review_desc=summary.get("review_score_desc") or "",
-            metacritic=(data.get("metacritic") or {}).get("score"),
-            release_date=(data.get("release_date") or {}).get("date") or "",
-            coming_soon=bool((data.get("release_date") or {}).get("coming_soon")),
-            developer=", ".join(data.get("developers") or []) or g["epic_developer"],
-            publisher=", ".join(data.get("publishers") or []),
-            singleplayer="Single-player" in cats,
-            multiplayer=any("Multi-player" in c or "PvP" in c for c in cats),
-            coop=any("Co-op" in c for c in cats),
-            controller="Full controller support" in cats,
-            steam_url=f"https://store.steampowered.com/app/{appid}/",
-        )
+        apply_steam(g, *chosen)
         log(f"  [{i}/{total}] {g['title'][:52]:<52} {g['rating'] or 0:>6}%  "
-            f"n={tot:<7} sort={g['sort_score'] or 0:>6}")
+            f"n={g['reviews']:<7} sort={g['sort_score'] or 0:>6}")
     return games
 
 
@@ -277,10 +292,10 @@ def hltb_hours(games):
 
 
 # ---------------------------------------------------------------- phase 5
-COLUMNS = ["title", "rating", "reviews", "sort_score", "review_desc", "genres",
-           "metacritic", "hltb_main", "release_date", "developer", "publisher",
-           "singleplayer", "multiplayer", "coop", "controller",
-           "steam_appid", "steam_url", "matched_name", "app_name"]
+COLUMNS = ["title", "steam_status", "rating", "reviews", "sort_score", "review_desc",
+           "genres", "metacritic", "hltb_main", "release_date", "developer", "publisher",
+           "singleplayer", "multiplayer", "coop", "controller", "duplicate_of",
+           "steam_appid", "steam_source", "steam_url", "matched_name", "app_name"]
 
 
 def emit(games):

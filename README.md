@@ -26,9 +26,12 @@ next section for you:
 1. finds a Python 3.8+ — the `py` launcher first, so it never trips over the Microsoft Store stub
 2. builds a private `.venv` inside the folder, touching nothing else on the machine
 3. installs legendary into it
-4. opens the Epic login the first time, and skips straight past it on every run after
-5. fetches your library and the Steam data, then retries the titles that did not match
-6. renders `out/report.html` and opens it in your browser
+4. runs the test suite over itself — offline and silent unless something is broken, so a bad
+   checkout stops here rather than an hour into fetching
+5. opens the Epic login the first time, and skips straight past it on every run after
+6. fetches your library and the Steam data, retries the titles that did not match, and settles
+   which of the rest are delisted
+7. renders `out/report.html`, prints the delisted count, and opens the page in your browser
 
 Run it as often as you like: it reuses the environment and the cache, so a second run takes seconds
 rather than an hour. Anything you pass goes through to the fetch step, so `run.bat --refresh`
@@ -146,9 +149,38 @@ the scripts recreate what they need.
    looser queries: drop `(Beta)` markers, drop the subtitle, strip punctuation, split
    `KillingFloor2Beta` into words. Matches are still name-checked before being accepted, and two
    Epic entries that land on the same Steam page are de-duplicated.
+5. **Verdict** — anything still unmatched is looked up on PCGamingWiki. Steam's search only
+   answers for games it currently sells, so a delisted game and one that was never on Steam are
+   both simply absent from it; the wiki carries an article either way, with the Steam appid in
+   its infobox when there is one. That appid is enough, because `appdetails` and `appreviews`
+   keep answering for a pulled game long after the store stops offering it.
 
-Games with no Steam listing — Epic exclusives, launcher stubs, delisted titles — stay in the list
-with blank Steam fields and sort to the bottom.
+## Why a game has no score
+
+Every row carries a `steam_status`, so a blank Steam column says which of these it is rather than
+lumping them together:
+
+| Status | Meaning |
+|---|---|
+| `listed` | On sale on Steam now, or free to play |
+| `delisted` | Pulled from sale, but the page and its reviews survive — **scored and ranked like any other game**, since you still own it on Epic |
+| `not-on-steam` | PCGamingWiki has an article and it lists no Steam appid: it was never there |
+| `duplicate` | A second Epic entry for a game already in the list — a test branch, a beta, an edition — naming the row that holds the data |
+| `unreleased` | Steam has a page, dated in the future |
+| `unknown` | Nothing found either way |
+
+Pick one from the **Any Steam status** dropdown in the report to see just those. Choosing a status
+lifts the *min reviews* floor for rows that have no reviews to count, so the categories that are
+blank by nature do not stay invisible.
+
+Delisted games are detected from what `appdetails` stops returning: a pulled title keeps its page,
+metadata and reviews, and loses every package, package group and price. Free-to-play games have no
+packages either, so they are separated by `is_free`, and an unreleased date is checked first.
+
+A wiki match is weaker than a Steam search hit and is marked as such — hover the badge to see which
+Steam page it landed on. Where a name is reused across releases it can pick the wrong one: Epic's
+free *Unreal Tournament* is the 2014 game, and PCGamingWiki's plain `Unreal Tournament` article is
+the 1999 one.
 
 ## The confidence score
 
@@ -202,12 +234,16 @@ the HTML report are UTF-8 regardless.
 ## Files
 
 ```
-run.bat           Windows one-click: environment, login, fetch, report
+run.bat           Windows one-click: environment, self-check, login, fetch, report
 epic_steam.py     phases 1-5: library -> match -> Steam -> playtime -> emit
-second_pass.py    retries unmatched titles with progressively looser queries
+second_pass.py    retries unmatched titles, then settles delisted vs never-there
+pcgw.py           PCGamingWiki lookup: title -> Steam appid, for titles search hides
 build_report.py   renders out/games.json into a sortable HTML page
-steamlib.py       cached/throttled HTTP, name normalisation, Wilson score
+steamlib.py       cached/throttled HTTP, name normalisation, Wilson score, store status
+test_*.py         unit tests, standard library unittest, no network
 requirements.txt  legendary-gl (the scripts themselves are standard library only)
 cache/            one JSON file per HTTP response      (generated, git-ignored)
 out/              games.json, games.csv, report.html   (generated, git-ignored)
 ```
+
+Run the tests with `python -m unittest discover`. They touch no network and no cache of yours.
