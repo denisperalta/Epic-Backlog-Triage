@@ -18,7 +18,28 @@ clone it, connect your own Epic account, and you get your own library ranked the
 
 Windows, macOS and Linux all work. The Epic Games Launcher does **not** need to be installed.
 
-## Setup
+## Quick start (Windows)
+
+Download or clone the repository, then **double-click `run.bat`**. It performs every step in the
+next section for you:
+
+1. finds a Python 3.8+ — the `py` launcher first, so it never trips over the Microsoft Store stub
+2. builds a private `.venv` inside the folder, touching nothing else on the machine
+3. installs legendary into it
+4. opens the Epic login the first time, and skips straight past it on every run after
+5. fetches your library and the Steam data, then retries the titles that did not match
+6. renders `out/report.html` and opens it in your browser
+
+Run it as often as you like: it reuses the environment and the cache, so a second run takes seconds
+rather than an hour. Anything you pass goes through to the fetch step, so `run.bat --refresh`
+re-reads your Epic library instead of the cached copy.
+
+If a step fails it stops there and says what to do about it, and the window stays open so you can
+read it.
+
+## Setup by hand
+
+Do this on macOS and Linux, or on Windows if you would rather drive it yourself.
 
 ### 1. Get the code and install legendary
 
@@ -181,6 +202,7 @@ the HTML report are UTF-8 regardless.
 ## Files
 
 ```
+run.bat           Windows one-click: environment, login, fetch, report
 epic_steam.py     phases 1-5: library -> match -> Steam -> playtime -> emit
 second_pass.py    retries unmatched titles with progressively looser queries
 build_report.py   renders out/games.json into a sortable HTML page

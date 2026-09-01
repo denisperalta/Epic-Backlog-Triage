@@ -1,3 +1,6 @@
 # Keep text files LF in the repository, checked out native on each machine.
 * text=auto
 *.py text diff=python
+
+# cmd.exe mishandles labels in LF-only batch files.
+*.bat text eol=crlf
