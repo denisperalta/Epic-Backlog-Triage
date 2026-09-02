@@ -2,15 +2,14 @@
 
 Phases, each independently cached under cache/ so reruns are cheap:
   1 library   legendary list --json  -> real games only
-  2 match     title -> Steam appid   (storefront SearchApps; see steam_index)
-  3 steam     appreviews + appdetails per matched appid
-  4 hltb      HowLongToBeat playtime (third-party, best effort)
-  5 emit      out/games.json, out/games.csv
+  2 steam     title -> the Steam store item, in one request per title (steamstore)
+  3 hltb      HowLongToBeat playtime (third-party, best effort)
+  4 emit      out/games.json, out/games.csv
 """
-import csv, json, os, re, subprocess, sys, time, urllib.parse
+import csv, json, os, re, subprocess, sys
 
-from steamlib import (CACHE, cached_json, cache_path, normalise, steam_status,
-                      use_utf8_stdout, wilson_lower)
+import steamstore
+from steamlib import CACHE, cached_json, normalise, use_utf8_stdout
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out")
@@ -51,7 +50,7 @@ def _run_legendary(args):
 
 def epic_library(refresh=False):
     if refresh or not os.path.exists(LIBRARY):
-        log("[1/5] querying legendary ...")
+        log("[1/4] querying legendary ...")
         # -T keeps titles that are not installable through Epic itself (EA/Origin
         # activations and similar); without it legendary silently hides them.
         proc = _run_legendary(["list", "--json", "-T"])
@@ -91,48 +90,24 @@ def epic_library(refresh=False):
             continue
         seen.add(key)
         uniq.append(g)
-    log(f"[1/5] {len(raw)} library entries -> {len(uniq)} games")
+    log(f"[1/4] {len(raw)} library entries -> {len(uniq)} games")
     return uniq
 
 
 # ---------------------------------------------------------------- phase 2
-def steam_index():
-    """Valve retired ISteamApps/GetAppList (404s as of 2026), so matching goes
-    through the storefront's own search endpoint instead - one cached request
-    per title, and it handles punctuation/subtitle differences better anyway."""
-    log("[2/5] matching via Steam storefront search")
-    return None, None
+def best(title, items):
+    """The closest real game in a result list, or None.
 
-
-def _search(term):
-    if not term:
-        return []
-    hits = cached_json("search_" + normalise(term),
-                       "https://steamcommunity.com/actions/SearchApps/"
-                       + urllib.parse.quote(term[:120]),
-                       bucket="community", delay=0.7)
-    out = []
-    for h in hits or []:
-        try:
-            out.append((int(h["appid"]), h.get("name") or ""))
-        except (KeyError, TypeError, ValueError):
-            pass
-    return out
-
-
-def candidates(title, _exact=None, _loose=None):
-    """Ordered appid guesses for an Epic title, best first."""
-    hits = _search(title)
-    if not hits:
-        hits = _search(normalise(title, True))
-    if not hits:
-        hits = _search(re.split(r"[:\-–]", title)[0].strip())
-    if not hits:
-        return []
-
+    Search is ordered by Steam's idea of relevance, which is not ours: a query
+    for a game returns its soundtrack, its season pass and its sequel too. Rank
+    on the normalised name instead, and take nothing that is not a game.
+    """
     want, want_loose = normalise(title), normalise(title, True)
     ranked = []
-    for appid, name in hits:
+    for it in items:
+        if it.get("success") != 1 or it.get("type") != steamstore.GAME:
+            continue
+        name = it.get("name") or ""
         n, nl = normalise(name), normalise(name, True)
         if n == want:
             rank = 0
@@ -142,106 +117,56 @@ def candidates(title, _exact=None, _loose=None):
             rank = 2
         else:
             rank = 3
-        ranked.append((rank, appid, name))
+        ranked.append((rank, it))
+    # Sort on the rank alone: store items are dicts and do not compare.
     ranked.sort(key=lambda r: r[0])
-
-    seen, ordered = set(), []
-    for _, appid, _name in ranked:
-        if appid not in seen:
-            seen.add(appid)
-            ordered.append(appid)
-    return ordered[:4]
+    return ranked[0][1] if ranked else None
 
 
-# ---------------------------------------------------------------- phase 3
-def appdetails(appid):
-    d = cached_json(f"details_{appid}",
-                    f"https://store.steampowered.com/api/appdetails?appids={appid}&l=english",
-                    bucket="store", delay=1.6)
-    if not d:
-        return None
-    node = d.get(str(appid)) or {}
-    return node.get("data") if node.get("success") else None
+def match(title):
+    """A Steam store item for an Epic title, trying looser queries in turn."""
+    for term in (title, normalise(title, True), re.split(r"[:\-–]", title)[0].strip()):
+        found = best(title, steamstore.search_items(term))
+        if found:
+            return found
+    return None
 
 
-def appreviews(appid):
-    d = cached_json(f"reviews_{appid}",
-                    f"https://store.steampowered.com/appreviews/{appid}"
-                    "?json=1&language=all&purchase_type=all&num_per_page=0",
-                    bucket="store", delay=1.6)
-    if not d or d.get("success") != 1:
-        return None
-    return d.get("query_summary")
-
-
-def apply_steam(g, appid, data, source="search"):
-    """Copy one resolved Steam listing onto a library entry.
+# ---------------------------------------------------------------- phase 2 (cont.)
+def apply_steam(g, item, source="search"):
+    """Copy one resolved Steam store item onto a library entry.
 
     Shared with second_pass so a title recovered on the second attempt carries
     exactly the same fields, from the same source of truth, as one matched first
     time round.
     """
-    summary = appreviews(appid) or {}
-    pos = summary.get("total_positive") or 0
-    neg = summary.get("total_negative") or 0
-    tot = summary.get("total_reviews") or 0
-    cats = {c.get("description") for c in data.get("categories") or []}
-
-    g.update(
-        steam_appid=appid,
-        matched_name=data.get("name"),
-        steam_status=steam_status(data),
-        steam_source=source,
-        genres=[x.get("description") for x in data.get("genres") or [] if x.get("description")],
-        rating=round(100.0 * pos / tot, 2) if tot else None,
-        reviews=tot,
-        positive=pos,
-        negative=neg,
-        sort_score=round(wilson_lower(pos, tot), 2) if tot else None,
-        review_desc=summary.get("review_score_desc") or "",
-        metacritic=(data.get("metacritic") or {}).get("score"),
-        release_date=(data.get("release_date") or {}).get("date") or "",
-        coming_soon=bool((data.get("release_date") or {}).get("coming_soon")),
-        developer=", ".join(data.get("developers") or []) or g.get("epic_developer", ""),
-        publisher=", ".join(data.get("publishers") or []),
-        singleplayer="Single-player" in cats,
-        multiplayer=any("Multi-player" in c or "PvP" in c for c in cats),
-        coop=any("Co-op" in c for c in cats),
-        controller="Full controller support" in cats,
-        steam_url="https://store.steampowered.com/app/%d/" % appid,
-    )
+    fields = steamstore.item_fields(item)
+    fields["steam_source"] = source
+    # Steam drops the credits from some pulled pages; Epic still knows who made it.
+    fields["developer"] = fields["developer"] or g.get("epic_developer", "")
+    g.update(fields)
     return g
 
 
-def enrich(games, exact, loose):
+def enrich(games):
     total = len(games)
     for i, g in enumerate(games, 1):
-        chosen = None
-        for appid in candidates(g["title"], exact, loose):
-            data = appdetails(appid)
-            if not data:
-                continue
-            # Reject DLC, soundtracks, demos, videos - we want the playable base game.
-            if data.get("type") != "game":
-                continue
-            chosen = (appid, data)
-            break
-
-        if not chosen:
-            # Not "no Steam listing" yet - only that the storefront search, which
-            # answers for games currently on sale, did not offer one. second_pass
-            # tells apart delisted, never-there and simply not found.
+        item = match(g["title"])
+        if not item:
+            # Not "no Steam listing" yet - only that search, which answers for
+            # games currently on sale, did not offer one. second_pass tells apart
+            # delisted, never-there and simply not found.
             g.update(steam_appid=None, matched_name=None, steam_status="unknown")
             log(f"  [{i}/{total}] {g['title'][:52]:<52} -- no Steam match")
             continue
 
-        apply_steam(g, *chosen)
+        apply_steam(g, item)
         log(f"  [{i}/{total}] {g['title'][:52]:<52} {g['rating'] or 0:>6}%  "
             f"n={g['reviews']:<7} sort={g['sort_score'] or 0:>6}")
     return games
 
 
-# ---------------------------------------------------------------- phase 4
+# ---------------------------------------------------------------- phase 3
 HLTB_API = "https://howlongtobeat.com/api/search/site"
 
 
@@ -272,10 +197,10 @@ def hltb_hours(games):
                         headers={"Referer": "https://howlongtobeat.com/",
                                  "Origin": "https://howlongtobeat.com"})
     if not (probe or {}).get("data"):
-        log("[4/5] HowLongToBeat refuses direct requests - leaving playtime blank")
+        log("[3/4] HowLongToBeat refuses direct requests - leaving playtime blank")
         return games
 
-    log("[4/5] HowLongToBeat reachable, fetching playtimes ...")
+    log("[3/4] HowLongToBeat reachable, fetching playtimes ...")
     for i, g in enumerate(games, 1):
         name = g.get("matched_name") or g["title"]
         res = cached_json("hltb_" + normalise(name), HLTB_API, bucket="hltb", delay=1.0,
@@ -287,13 +212,13 @@ def hltb_hours(games):
             g["hltb_main"] = round(hit["comp_main"] / 3600.0, 1)
             g["hltb_name"] = hit.get("game_name")
         if i % 50 == 0:
-            log("  [4/5] %d/%d" % (i, len(games)))
+            log("  [3/4] %d/%d" % (i, len(games)))
     return games
 
 
-# ---------------------------------------------------------------- phase 5
+# ---------------------------------------------------------------- phase 4
 COLUMNS = ["title", "steam_status", "rating", "reviews", "sort_score", "review_desc",
-           "genres", "metacritic", "hltb_main", "release_date", "developer", "publisher",
+           "tags", "hltb_main", "release_date", "developer", "publisher",
            "singleplayer", "multiplayer", "coop", "controller", "duplicate_of",
            "steam_appid", "steam_source", "steam_url", "matched_name", "app_name"]
 
@@ -314,7 +239,7 @@ def emit(games):
                 row.append("; ".join(v) if isinstance(v, list) else ("" if v is None else v))
             w.writerow(row)
     matched = sum(1 for g in ranked if g.get("steam_appid"))
-    log(f"[5/5] wrote out/games.json + out/games.csv "
+    log(f"[4/4] wrote out/games.json + out/games.csv "
         f"({matched}/{len(ranked)} matched to Steam)")
     return ranked
 
@@ -323,9 +248,8 @@ def main():
     use_utf8_stdout()
     refresh = "--refresh" in sys.argv
     games = epic_library(refresh)
-    exact, loose = steam_index()
-    log(f"[3/5] enriching {len(games)} games from the Steam store ...")
-    games = enrich(games, exact, loose)
+    log(f"[2/4] matching {len(games)} games against the Steam store ...")
+    games = enrich(games)
     if "--no-hltb" not in sys.argv:
         games = hltb_hours(games)
     emit(games)
