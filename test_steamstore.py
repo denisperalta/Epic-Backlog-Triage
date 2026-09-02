@@ -186,3 +186,70 @@ class TestItemFields(unittest.TestCase):
         fresh.pop("reviews")
         self.assertEqual(steamstore.item_fields(fresh)["review_desc"],
                          "No user reviews")
+
+
+class TestSearchItems(CacheDir):
+    def test_results_come_back_in_order(self):
+        self.seed("find_" + steamlib.normalise("Hades"),
+                  {"response": {"store_items": [HADES, dict(HADES, appid=1, name="B")]}})
+        got = steamstore.search_items("Hades")
+        self.assertEqual([i["name"] for i in got], ["Hades", "B"])
+
+    def test_an_empty_term_never_reaches_the_network(self):
+        self.assertEqual(steamstore.search_items(""), [])
+
+    def test_a_remembered_miss_is_an_empty_list(self):
+        self.seed("find_" + steamlib.normalise("Nothing At All"), None)
+        self.assertEqual(steamstore.search_items("Nothing At All"), [])
+
+
+class TestGetItems(CacheDir):
+    def test_a_cached_appid_is_not_fetched_again(self):
+        self.seed("item_1145360", HADES)
+
+        def explode(*a, **k):
+            raise AssertionError("fetched an appid that was already cached")
+
+        self.addCleanup(setattr, steamstore, "fetch_json", steamstore.fetch_json)
+        steamstore.fetch_json = explode
+        self.assertEqual(steamstore.get_items([1145360])[1145360]["name"], "Hades")
+
+    def test_ids_are_requested_in_chunks(self):
+        """Two hundred is the batch; 243 is where the URL stops being accepted."""
+        calls = []
+
+        def fake(url, **kw):
+            calls.append(url)
+            return {"response": {"store_items": []}}
+
+        self.addCleanup(setattr, steamstore, "fetch_json", steamstore.fetch_json)
+        steamstore.fetch_json = fake
+        steamstore.get_items(range(10, 460))          # 450 ids
+        self.assertEqual(len(calls), 3)
+
+    def test_an_appid_steam_will_not_answer_for_is_remembered_as_a_miss(self):
+        """A second run must not re-ask for an app that has been removed."""
+        self.addCleanup(setattr, steamstore, "fetch_json", steamstore.fetch_json)
+        steamstore.fetch_json = lambda url, **kw: {
+            "response": {"store_items": [{"appid": 0, "success": 15}]}}
+        self.assertEqual(steamstore.get_items([267550]), {})
+        self.assertTrue(os.path.exists(steamlib.cache_path("item_267550")))
+
+        def explode(*a, **k):
+            raise AssertionError("re-asked for a remembered miss")
+
+        steamstore.fetch_json = explode
+        self.assertEqual(steamstore.get_items([267550]), {})
+
+    def test_duplicate_ids_are_asked_for_once(self):
+        calls = []
+
+        def fake(url, **kw):
+            calls.append(url)
+            return {"response": {"store_items": [HADES]}}
+
+        self.addCleanup(setattr, steamstore, "fetch_json", steamstore.fetch_json)
+        steamstore.fetch_json = fake
+        got = steamstore.get_items([1145360, 1145360, 1145360])
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(list(got), [1145360])

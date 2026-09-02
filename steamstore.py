@@ -185,3 +185,67 @@ def item_fields(item):
         controller="Full controller support" in cats,
         steam_url="https://store.steampowered.com/app/%d/" % appid,
     )
+
+
+def search_items(term):
+    """Store items matching a search term, best first, with their data included.
+
+    One request where the old path took two to five: the search itself, then an
+    appdetails probe for each candidate appid until one turned out to be a game.
+    `type` arrives here, so the wrong kind of hit is rejected without asking.
+
+    Cached under `find_` rather than `search_`, which the retired storefront
+    search used for a different payload shape.
+    """
+    if not term:
+        return []
+    payload = {"search_term": term[:120], "context": CTX,
+               "data_request": DATA_REQUEST}
+    d = cached_json("find_" + normalise(term),
+                    _url("IStoreQueryService", "SearchSuggestions", payload),
+                    bucket=BUCKET, delay=DELAY)
+    return ((d or {}).get("response") or {}).get("store_items") or []
+
+
+def get_items(appids):
+    """appid -> store item, for every id Steam still answers for.
+
+    Cached one file per appid rather than one per request, so a rerun that groups
+    its batches differently still costs nothing. A null file remembers that Steam
+    had nothing, the same bargain cached_json makes.
+    """
+    out, missing = {}, []
+    for appid in dict.fromkeys(int(a) for a in appids):
+        path = cache_path("item_%d" % appid)
+        if os.path.exists(path):
+            try:
+                with open(path, encoding="utf-8") as fh:
+                    seen = json.load(fh)
+                if seen:
+                    out[appid] = seen
+                continue
+            except (ValueError, OSError):
+                pass
+        missing.append(appid)
+
+    for i in range(0, len(missing), CHUNK):
+        chunk = missing[i:i + CHUNK]
+        payload = {"ids": [{"appid": a} for a in chunk], "context": CTX,
+                   "data_request": DATA_REQUEST}
+        d = fetch_json(_url("IStoreBrowseService", "GetItems", payload),
+                       bucket=BUCKET, delay=DELAY)
+        answered = {}
+        for it in ((d or {}).get("response") or {}).get("store_items") or []:
+            if it.get("success") == 1 and it.get("appid"):
+                answered[int(it["appid"])] = it
+        for appid in chunk:
+            item = answered.get(appid)
+            if item:
+                out[appid] = item
+            try:
+                with open(cache_path("item_%d" % appid), "w",
+                          encoding="utf-8") as fh:
+                    json.dump(item, fh)
+            except OSError:
+                pass
+    return out
