@@ -44,7 +44,7 @@ def variants(title):
 
 
 STEAM_FIELDS = ("steam_appid", "matched_name", "tags", "rating", "reviews", "positive",
-                "negative", "sort_score", "review_desc", "release_date",
+                "negative", "sort_score", "review_desc", "release_date", "coming_soon",
                 "developer", "publisher", "singleplayer", "multiplayer", "coop",
                 "controller", "steam_url", "steam_source")
 
