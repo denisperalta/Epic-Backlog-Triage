@@ -46,7 +46,7 @@ class TestCatalogue(unittest.TestCase):
 
 class TestDataLabels(unittest.TestCase):
     def test_steam_review_tiers_are_all_covered(self):
-        """Valve's nine tiers plus the no-reviews case, as appreviews spells them."""
+        """Valve's nine tiers plus the no-reviews case, as the store API spells them."""
         for tier in ("Overwhelmingly Positive", "Very Positive", "Positive",
                      "Mostly Positive", "Mixed", "Mostly Negative", "Negative",
                      "Very Negative", "Overwhelmingly Negative", "No user reviews"):

@@ -21,7 +21,7 @@ ranked ninth is a game Steam no longer sells.
 |---|---|
 | **Python 3.8 or newer** | Everything here is standard library only |
 | **An Epic Games account** | Read-only: the library listing, nothing else |
-| **About an hour, once** | Every HTTP response is cached, so later runs take seconds |
+| **A couple of minutes** | Every HTTP response is cached, so later runs take seconds |
 
 Windows, macOS and Linux all work. The Epic Games Launcher does **not** need to be installed.
 
@@ -34,14 +34,14 @@ next section for you:
 2. builds a private `.venv` inside the folder, touching nothing else on the machine
 3. installs legendary into it
 4. runs the test suite over itself — offline and silent unless something is broken, so a bad
-   checkout stops here rather than an hour into fetching
+   checkout stops here rather than minutes into fetching
 5. opens the Epic login the first time, and skips straight past it on every run after
 6. fetches your library and the Steam data, retries the titles that did not match, and settles
    which of the rest are delisted
 7. renders `out/report.html`, prints the delisted count, and opens the page in your browser
 
 Run it as often as you like: it reuses the environment and the cache, so a second run takes seconds
-rather than an hour. Anything you pass goes through to the fetch step, so `run.bat --refresh`
+rather than minutes. Anything you pass goes through to the fetch step, so `run.bat --refresh`
 re-reads your Epic library instead of the cached copy.
 
 If a step fails it stops there and says what to do about it, and the window stays open so you can
@@ -134,8 +134,8 @@ Everything is inside the one file: no server, no build step, no dependencies. Op
 mail it to yourself, carry it on a stick. The only thing it asks the network for is its webfonts,
 and every rule names a system fallback, so offline it just looks slightly plainer.
 
-**The filters stack.** The search box matches title, genre, developer and publisher; the two
-dropdowns narrow by genre and by Steam status; the *min reviews* slider steps through 0, 100, 500,
+**The filters stack.** The search box matches title, tag, developer and publisher; the two
+dropdowns narrow by tag and by Steam status; the *min reviews* slider steps through 0, 100, 500,
 2,000, 10,000 and 50,000, and opens at 100; Solo, Co-op and Controller keep only the games that
 declare support for them. **Reset** clears the lot. Sort from the dropdown or by clicking a column
 heading, and click it again to flip the direction.
@@ -143,11 +143,12 @@ heading, and click it again to flip the direction.
 **English or Spanish.** The page opens in whichever language your browser asks for — on Windows
 that follows the system display language — and the `ES`/`EN` switch at the top right overrides it.
 The choice is remembered in that browser for next time. Switching translates the interface, Steam's
-genre names and its review tiers (*Very Positive* becomes *Muy positivas*), and reformats numbers
+tag names and its review tiers (*Very Positive* becomes *Muy positivas*), and reformats numbers
 and dates for the locale: 308,000 reviews become 308.000, 92.50% becomes 92,50 %, and the fetch
 date in the footer is written out the Spanish way. Titles, developers and publishers are left
-alone — they are names, not text. Filtering and sorting are unaffected: the genre dropdown shows
-translated names but still matches on what Steam actually sent.
+alone — they are names, not text. Filtering and sorting are unaffected: the tag dropdown shows
+translated names but still matches on what Steam actually sent. Steam has some four hundred
+tags and only the common ones are translated; the rest stay in English rather than disappear.
 
 ## What lands where
 
@@ -167,21 +168,24 @@ the scripts recreate what they need.
 1. **Library** — `legendary list --json -T`, keeping entries whose Epic categories include `games`
    or `software`. That drops the Unreal Engine assets, plugins and sample projects that share the
    account, while keeping oddities like RPG in a Box that Epic files under software.
-2. **Match** — each title goes through Steam's storefront search endpoint. Results are ranked by how
-   exactly the name matches (exact, then edition-stripped, then substring), and candidates that turn
-   out to be DLC, soundtracks or demos are rejected in favour of the base game.
-3. **Enrich** — `store.steampowered.com/appreviews/<id>` for the review split, and `api/appdetails`
-   for genre, Metacritic, release date, developer and player modes. Requests are throttled to stay
-   inside Valve's rate limit and retried with backoff on 429.
-4. **Second pass** — `second_pass.py` takes the titles that came back empty and walks a ladder of
+2. **Match** — each title goes to `api.steampowered.com/IStoreQueryService/SearchSuggestions`,
+   which answers with the matching store items and their reviews, tags, categories, release
+   date and developer already attached. Results are ranked by how exactly the name matches
+   (exact, then edition-stripped, then substring), and anything that is not a base game — DLC,
+   a soundtrack, a demo — is rejected without a second request.
+3. **Second pass** — `second_pass.py` takes the titles that came back empty and walks a ladder of
    looser queries: drop `(Beta)` markers, drop the subtitle, strip punctuation, split
    `KillingFloor2Beta` into words. Matches are still name-checked before being accepted, and two
    Epic entries that land on the same Steam page are de-duplicated.
-5. **Verdict** — anything still unmatched is looked up on PCGamingWiki. Steam's search only
+4. **Verdict** — anything still unmatched is looked up on PCGamingWiki. Steam's search only
    answers for games it currently sells, so a delisted game and one that was never on Steam are
    both simply absent from it; the wiki carries an article either way, with the Steam appid in
-   its infobox when there is one. That appid is enough, because `appdetails` and `appreviews`
-   keep answering for a pulled game long after the store stops offering it.
+   its infobox when there is one. That appid is enough, because `GetItems` keeps answering for a
+   pulled game long after the store stops offering it.
+
+Review counts are Steam's filtered totals - the number its own store page shows.
+The report has no Metacritic column and no Steam genres, because the batched
+endpoints do not carry either; the Tags column stands in for genres.
 
 ## Why a game has no score
 
@@ -201,9 +205,9 @@ Pick one from the **Any Steam status** dropdown in the report to see just those.
 lifts the *min reviews* floor for rows that have no reviews to count, so the categories that are
 blank by nature do not stay invisible.
 
-Delisted games are detected from what `appdetails` stops returning: a pulled title keeps its page,
-metadata and reviews, and loses every package, package group and price. Free-to-play games have no
-packages either, so they are separated by `is_free`, and an unreleased date is checked first.
+Delisted games are not inferred any more: the store API marks a pulled title `unlisted`, and
+still hands over its page, its metadata and its reviews. An unannounced game is checked first,
+since it has nothing to sell either.
 
 A wiki match is weaker than a Steam search hit and is marked as such — hover the badge to see which
 Steam page it landed on. Where a name is reused across releases it can pick the wrong one: Epic's
@@ -249,10 +253,10 @@ if it does not show your display name, redo step 2.
 python -c "import json,glob,os; [os.remove(p) for p in glob.glob('cache/*.json') if json.load(open(p,encoding='utf-8')) is None]"
 ```
 
-**Stale review counts** — delete `cache/reviews_*.json` and rerun `epic_steam.py`. That refreshes the
-review numbers without re-resolving the whole library.
+**Stale review counts** — delete `cache/item_*.json` and rerun `epic_steam.py`. That refreshes each
+game's Steam data, reviews included, without re-resolving the whole library.
 
-**A game matched to the wrong Steam page** — delete the corresponding `cache/search_<title>.json`
+**A game matched to the wrong Steam page** — delete the corresponding `cache/find_<title>.json`
 and rerun. Matching starts over for that title only.
 
 **Garbled titles in the terminal** — the scripts switch stdout to UTF-8 on startup, but a terminal
@@ -266,8 +270,9 @@ run.bat           Windows one-click: environment, self-check, login, fetch, repo
 epic_steam.py     phases 1-5: library -> match -> Steam -> playtime -> emit
 second_pass.py    retries unmatched titles, then settles delisted vs never-there
 pcgw.py           PCGamingWiki lookup: title -> Steam appid, for titles search hides
+steamstore.py     the Steam store API: search, batched lookup, item -> row
 build_report.py   renders out/games.json into a sortable HTML page, in English and Spanish
-steamlib.py       cached/throttled HTTP, name normalisation, Wilson score, store status
+steamlib.py       cached/throttled HTTP, name normalisation, Wilson score
 test_*.py         unit tests: matching, delisting, the report and its two languages
 requirements.txt  legendary-gl (the scripts themselves are standard library only)
 LICENSE           MIT

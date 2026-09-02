@@ -58,7 +58,7 @@ echo [3/7] legendary installed
 
 rem -------------------------------------------------------- 4. self-check
 rem Fast and offline. Running it here means a half-applied edit or a damaged
-rem checkout is caught before the Epic login and an hour of Steam fetching,
+rem checkout is caught before the Epic login and the Steam fetching,
 rem rather than after. Silent unless something is actually wrong.
 "%VPY%" -m unittest discover -b >nul 2>&1
 if errorlevel 1 goto :tests_failed
@@ -90,9 +90,8 @@ if errorlevel 1 goto :auth_failed
 rem ----------------------------------------------------------- 6. the work
 echo.
 echo [6/7] reading your library and fetching Steam data ...
-echo       The first run takes roughly an hour - Steam is rate limited, so
-echo       requests are throttled and every reply is cached. Every run after
-echo       this one finishes in seconds. Leave it going.
+echo       The first run takes a couple of minutes. Every reply is cached, so
+echo       every run after this one finishes in seconds.
 echo.
 "%VPY%" epic_steam.py %*
 if errorlevel 1 goto :run_failed

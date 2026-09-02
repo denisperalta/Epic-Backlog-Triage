@@ -3,7 +3,7 @@ import json, math, os, re, sys, time, urllib.parse, urllib.request, urllib.error
 
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 # A fresh clone has no cache/ - it is generated, so it is not in the repository.
-# Without this the very first run silently stops memoising and takes an hour
+# Without this the very first run silently stops memoising and takes minutes
 # every time.
 os.makedirs(CACHE, exist_ok=True)
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " \
@@ -16,7 +16,7 @@ def use_utf8_stdout():
 
     Windows terminals still default to cp1252 and friends, so the first title
     with a character outside it - an accent, a Japanese subtitle, a smart quote -
-    would end an hour-long run with UnicodeEncodeError.
+    would end a minutes-long run with UnicodeEncodeError.
     """
     for stream in (sys.stdout, sys.stderr):
         try:
