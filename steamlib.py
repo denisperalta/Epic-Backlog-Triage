@@ -38,6 +38,37 @@ def cache_path(key):
     return os.path.join(CACHE, safe + ".json")
 
 
+def fetch_json(url, bucket="steam", delay=1.5, tries=5, post=None, headers=None):
+    """One throttled, retried request, decoded as JSON. None on hard failure.
+
+    Separate from cached_json because the batched store endpoint caches one file
+    per appid while fetching two hundred at a time - the cache key and the URL
+    stop being the same thing.
+    """
+    for attempt in range(tries):
+        _throttle(bucket, delay)
+        try:
+            hdrs = {"User-Agent": UA, "Accept": "application/json"}
+            if headers:
+                hdrs.update(headers)
+            body = None
+            if post is not None:
+                body = json.dumps(post).encode()
+                hdrs["Content-Type"] = "application/json"
+            req = urllib.request.Request(url, data=body, headers=hdrs)
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                return json.loads(resp.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 502, 503):
+                time.sleep(min(60, 5 * (2 ** attempt)))
+                continue
+            return None
+        except Exception:
+            time.sleep(2 * (attempt + 1))
+            continue
+    return None
+
+
 def cached_json(key, url, bucket="steam", delay=1.5, tries=5, post=None, headers=None):
     """Fetch url as JSON, memoised on disk under `key`. Returns None on hard failure.
 
@@ -51,30 +82,7 @@ def cached_json(key, url, bucket="steam", delay=1.5, tries=5, post=None, headers
         except (ValueError, OSError):
             pass
 
-    data = None
-    for attempt in range(tries):
-        _throttle(bucket, delay)
-        try:
-            hdrs = {"User-Agent": UA, "Accept": "application/json"}
-            if headers:
-                hdrs.update(headers)
-            body = None
-            if post is not None:
-                body = json.dumps(post).encode()
-                hdrs["Content-Type"] = "application/json"
-            req = urllib.request.Request(url, data=body, headers=hdrs)
-            with urllib.request.urlopen(req, timeout=45) as resp:
-                data = json.loads(resp.read().decode("utf-8", "replace"))
-            break
-        except urllib.error.HTTPError as e:
-            if e.code in (429, 502, 503):
-                time.sleep(min(60, 5 * (2 ** attempt)))
-                continue
-            break
-        except Exception:
-            time.sleep(2 * (attempt + 1))
-            continue
-
+    data = fetch_json(url, bucket, delay, tries, post, headers)
     try:
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(data, fh)
