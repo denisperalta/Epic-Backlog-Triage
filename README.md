@@ -5,8 +5,10 @@ title against live Steam review data, so you can pick something to play instead 
 launcher full of free-giveaway games you have never opened.
 
 The output is `out/report.html`: one self-contained page, sortable and filterable, that works
-offline and needs no server. Nothing in this repository is specific to the person who wrote it —
-clone it, connect your own Epic account, and you get your own library ranked the same way.
+offline and needs no server. It reads in English or Spanish — it opens in whichever your system
+is set to, and the `ES`/`EN` switch at the top right overrides that and remembers the choice.
+Nothing in this repository is specific to the person who wrote it — clone it, connect your own
+Epic account, and you get your own library ranked the same way.
 
 ## What you need
 
@@ -120,6 +122,27 @@ Flags for `epic_steam.py`:
 |---|---|
 | `--refresh` | Re-query legendary instead of reusing the cached library dump |
 | `--no-hltb` | Skip the HowLongToBeat phase entirely |
+
+## Reading the report
+
+Everything is inside the one file: no server, no build step, no dependencies. Open it from disk,
+mail it to yourself, carry it on a stick. The only thing it asks the network for is its webfonts,
+and every rule names a system fallback, so offline it just looks slightly plainer.
+
+**The filters stack.** The search box matches title, genre, developer and publisher; the two
+dropdowns narrow by genre and by Steam status; the *min reviews* slider steps through 0, 100, 500,
+2,000, 10,000 and 50,000, and opens at 100; Solo, Co-op and Controller keep only the games that
+declare support for them. **Reset** clears the lot. Sort from the dropdown or by clicking a column
+heading, and click it again to flip the direction.
+
+**English or Spanish.** The page opens in whichever language your browser asks for — on Windows
+that follows the system display language — and the `ES`/`EN` switch at the top right overrides it.
+The choice is remembered in that browser for next time. Switching translates the interface, Steam's
+genre names and its review tiers (*Very Positive* becomes *Muy positivas*), and reformats numbers
+and dates for the locale: 308,000 reviews become 308.000, 92.50% becomes 92,50 %, and the fetch
+date in the footer is written out the Spanish way. Titles, developers and publishers are left
+alone — they are names, not text. Filtering and sorting are unaffected: the genre dropdown shows
+translated names but still matches on what Steam actually sent.
 
 ## What lands where
 
@@ -238,9 +261,9 @@ run.bat           Windows one-click: environment, self-check, login, fetch, repo
 epic_steam.py     phases 1-5: library -> match -> Steam -> playtime -> emit
 second_pass.py    retries unmatched titles, then settles delisted vs never-there
 pcgw.py           PCGamingWiki lookup: title -> Steam appid, for titles search hides
-build_report.py   renders out/games.json into a sortable HTML page
+build_report.py   renders out/games.json into a sortable HTML page, in English and Spanish
 steamlib.py       cached/throttled HTTP, name normalisation, Wilson score, store status
-test_*.py         unit tests, standard library unittest, no network
+test_*.py         unit tests: matching, delisting, the report and its two languages
 requirements.txt  legendary-gl (the scripts themselves are standard library only)
 cache/            one JSON file per HTTP response      (generated, git-ignored)
 out/              games.json, games.csv, report.html   (generated, git-ignored)
