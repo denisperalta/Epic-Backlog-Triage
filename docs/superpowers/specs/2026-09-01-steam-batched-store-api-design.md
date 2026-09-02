@@ -116,12 +116,17 @@ lands at roughly 2 minutes.
 
 ## Field mapping
 
-Every field in `out/games.json` keeps its name and type. The sources change:
+Every field in `out/games.json` keeps its name and type, with one exception: the
+column was relabelled Tags in the report, so `genres` is **renamed `tags`**
+throughout - `games.json`, `games.csv`, `COLUMNS`, and the report's JS. A field
+called `genres` holding tag names would be exactly the kind of drift this codebase
+avoids, and the file is generated and gitignored, so nothing depends on the old
+name. `GENRE_ES` becomes `TAG_ES` for the same reason.
 
 | field | was | becomes |
 |---|---|---|
 | `matched_name` | `data.name` | `item.name` |
-| `genres` | `genres[].description` | top 3 tags (see below) resolved through `tag_names()` |
+| `genres` -> `tags` | `genres[].description` | top 3 tags (see below) resolved through `tag_names()` |
 | `rating` | `100 * pos / total` | `reviews.summary_filtered.percent_positive` |
 | `reviews` | `total_reviews` | `summary_filtered.review_count` |
 | `positive` / `negative` | exact integers | `round(count * pct/100)` and the remainder |
