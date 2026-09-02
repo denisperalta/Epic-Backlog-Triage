@@ -201,8 +201,49 @@ separates *delisted* from *never on Steam* stays necessary and unchanged.
   translate and the rest fall through untranslated - already the documented
   behaviour of that map.
 - Correct the footer credit, which currently names Metacritic and genres.
-- README: the "about an hour, once" row, the phase list, and the methodology
-  paragraph.
+
+## Documentation
+
+Every passage describing the old fetch path is now wrong. The full surface:
+
+**`README.md`**
+
+| line | what is wrong |
+|---|---|
+| 24 | "About an hour, once" - the headline claim for the whole project |
+| 37, 44 | "an hour into fetching", "rather than an hour" |
+| 137-138 | search and dropdown described as matching *genre* |
+| 146, 149 | the Spanish section's account of translated genre names |
+| 170-174 | **How a game gets its numbers** - names the storefront search, `appreviews` and `appdetails`, and lists genre and Metacritic as what the latter supplies |
+| 183 | "because `appdetails` and `appreviews` still answer" - the PCGamingWiki rationale |
+| 204 | **Why a game has no score** - the whole delisting-by-missing-packages explanation, now replaced by the `unlisted` flag |
+| 262+ | the file inventory, which needs `steamstore.py` |
+
+The screenshot caption added separately on this branch says "389 games"; leave the
+count alone, but the Metacritic column will no longer be in the image. Reshooting
+the screenshot is out of scope - note it in the commit body so it is not forgotten.
+
+**`run.bat`**
+
+- lines 93-95, the "[6/7]" banner promising "roughly an hour ... Leave it going"
+- line 61, the comment explaining why the self-check runs before "an hour of Steam
+  fetching"
+
+**Module docstrings** - all four are load-bearing in this codebase's style, and all
+four currently describe the retired path:
+
+- `epic_steam.py` - the numbered phase list naming `appreviews` and `appdetails`
+- `steam_index()` - explains a workaround for a retired endpoint that this change
+  deletes outright
+- `steamlib.py` - the one-line summary, now that status classification has left it
+- `second_pass.py` - names `appdetails` and `appreviews` as what still answers for a
+  pulled game
+- `steamstore.py` - new, and carries the reasoning for the endpoint choice: the
+  243-id ceiling, why POST is unavailable, and what the endpoints do not return
+
+New timings quoted in documentation should say **"a couple of minutes"** rather than
+a precise figure, since the measured 2 minutes is for one 390-title library on one
+connection.
 
 ## Cache
 
