@@ -4,3 +4,6 @@
 
 # cmd.exe mishandles labels in LF-only batch files.
 *.bat text eol=crlf
+
+# Screenshots are binary; never let text=auto guess otherwise.
+*.png binary

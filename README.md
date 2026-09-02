@@ -10,6 +10,11 @@ is set to, and the `ES`/`EN` switch at the top right overrides that and remember
 Nothing in this repository is specific to the person who wrote it — clone it, connect your own
 Epic account, and you get your own library ranked the same way.
 
+![The report: 389 games from one Epic library, ranked by confidence score](docs/screenshot.png)
+
+The top of one real library. Every number on the page came from Steam that morning; the row
+ranked ninth is a game Steam no longer sells.
+
 ## What you need
 
 | | |
@@ -266,6 +271,7 @@ steamlib.py       cached/throttled HTTP, name normalisation, Wilson score, store
 test_*.py         unit tests: matching, delisting, the report and its two languages
 requirements.txt  legendary-gl (the scripts themselves are standard library only)
 LICENSE           MIT
+docs/             the screenshot at the top of this README
 cache/            one JSON file per HTTP response      (generated, git-ignored)
 out/              games.json, games.csv, report.html   (generated, git-ignored)
 ```
