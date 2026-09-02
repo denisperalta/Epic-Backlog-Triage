@@ -265,8 +265,17 @@ build_report.py   renders out/games.json into a sortable HTML page, in English a
 steamlib.py       cached/throttled HTTP, name normalisation, Wilson score, store status
 test_*.py         unit tests: matching, delisting, the report and its two languages
 requirements.txt  legendary-gl (the scripts themselves are standard library only)
+LICENSE           MIT
 cache/            one JSON file per HTTP response      (generated, git-ignored)
 out/              games.json, games.csv, report.html   (generated, git-ignored)
 ```
 
 Run the tests with `python -m unittest discover`. They touch no network and no cache of yours.
+
+## License
+
+[MIT](LICENSE). Do what you like with the code. What it fetches is not covered by that licence:
+the review numbers and store metadata are Valve's, and the article data is
+[PCGamingWiki's](https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights). Both are read
+through their public endpoints, at a rate their own limits allow, and cached locally rather than
+redistributed.
