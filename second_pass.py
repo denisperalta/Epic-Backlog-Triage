@@ -1,23 +1,24 @@
 """Retry the titles that phase 2 could not match, and settle why the rest failed.
 
-Steam's storefront search only answers to fairly literal names, so Epic entries
+Steam's store search only answers to fairly literal names, so Epic entries
 carrying branch markers ("(Beta)", "Test branch"), episode numbering or trailing
 subtitles come back empty. This walks a ladder of progressively looser queries
 and stops at the first one that yields a real base game.
 
-It also answers for games no query can reach. Steam's search only lists what it
+It also answers for games no query can reach. Search only lists what Steam
 currently sells, so a delisted game and one that was never on Steam both come
 back as nothing at all. PCGamingWiki tells them apart, and gives the appid that
-Steam's own appdetails and appreviews still answer for, so a pulled game keeps
-its reviews and its place in the ranking instead of sinking to the bottom
-unexplained. Every entry ends up carrying a steam_status: listed, delisted,
-not-on-steam, duplicate, unreleased, or unknown.
+GetItems still answers for, so a pulled game keeps its reviews and its place in
+the ranking instead of sinking to the bottom unexplained. Every entry ends up
+carrying a steam_status: listed, delisted, not-on-steam, duplicate, unreleased,
+or unknown.
 """
-import json, os, re, urllib.parse
+import json, os, re
 from collections import Counter
 
 import pcgw
-from steamlib import cached_json, normalise, use_utf8_stdout
+import steamstore
+from steamlib import normalise, use_utf8_stdout
 import epic_steam as E
 
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
@@ -42,8 +43,8 @@ def variants(title):
     return out
 
 
-STEAM_FIELDS = ("steam_appid", "matched_name", "genres", "rating", "reviews", "positive",
-                "negative", "sort_score", "review_desc", "metacritic", "release_date",
+STEAM_FIELDS = ("steam_appid", "matched_name", "tags", "rating", "reviews", "positive",
+                "negative", "sort_score", "review_desc", "release_date",
                 "developer", "publisher", "singleplayer", "multiplayer", "coop",
                 "controller", "steam_url", "steam_source")
 
@@ -81,30 +82,44 @@ def mark_duplicates(games):
     return dupes
 
 
-def resolve_via_wiki(g):
-    """Last resort: ask PCGamingWiki for the appid, and record what it settles.
+def wiki_pass(games):
+    """Ask PCGamingWiki about everything still unmatched, then settle it in one call.
 
     Steam's search only answers for games it currently sells, so everything that
     reaches here is either delisted, never on Steam, or named too oddly to find.
     The wiki knows which: an article carrying a Steam appid means the game is on
     Steam and the store simply stopped offering it, an article without one means
     it was never there, and no article at all means nobody can say.
+
+    The appids the wiki hands back are looked up together rather than one at a
+    time - the wiki call is the slow part, so there is no reason to pay for a
+    round trip per game on top of it.
     """
-    appid, page_title = pcgw.steam_appid(g["title"])
-    if not appid:
-        g["steam_status"] = "not-on-steam" if page_title else "unknown"
-        return False
+    pending = []
+    for g in games:
+        if g.get("steam_appid"):
+            continue
+        appid, page_title = pcgw.steam_appid(g["title"])
+        if not appid:
+            g["steam_status"] = "not-on-steam" if page_title else "unknown"
+            continue
+        pending.append((g, appid))
 
-    data = E.appdetails(appid)
-    # A search hit of type "dlc" is a soundtrack dragged in by a loose query and
-    # gets rejected, but the wiki points at one deliberate page - and Steam files
-    # The Vanishing of Ethan Carter Redux as DLC - so it is taken here.
-    if not data or data.get("type") not in ("game", "dlc"):
-        g["steam_status"] = "unknown"
-        return False
-
-    E.apply_steam(g, appid, data, source="pcgw")
-    return True
+    items = steamstore.get_items([appid for _, appid in pending])
+    fixed = 0
+    for g, appid in pending:
+        item = items.get(appid)
+        # A search hit of type "dlc" is a soundtrack dragged in by a loose query
+        # and gets rejected, but the wiki points at one deliberate page - and Steam
+        # files The Vanishing of Ethan Carter Redux as DLC - so it is taken here.
+        if not item or item.get("type") not in (steamstore.GAME, steamstore.DLC):
+            g["steam_status"] = "unknown"
+            continue
+        E.apply_steam(g, item, source="pcgw")
+        print("  + %-46s via PCGamingWiki -> %s (%s)"
+              % (g["title"][:46], g["matched_name"], g["steam_status"]))
+        fixed += 1
+    return fixed
 
 
 def main():
@@ -120,39 +135,29 @@ def main():
     fixed = 0
     for g in stuck:
         for v in variants(g["title"]):
-            hits = cached_json("search_" + normalise(v),
-                               "https://steamcommunity.com/actions/SearchApps/"
-                               + urllib.parse.quote(v[:120]),
-                               bucket="community", delay=0.7)
-            if not hits:
+            items = steamstore.search_items(v)
+            if not items:
                 continue
             want = normalise(g["title"], True)
-            for h in hits[:3]:
-                try:
-                    appid = int(h["appid"])
-                except (KeyError, TypeError, ValueError):
+            for it in items[:3]:
+                if it.get("success") != 1 or it.get("type") != steamstore.GAME:
                     continue
-                got = normalise(h.get("name") or "", True)
+                got = normalise(it.get("name") or "", True)
                 # Guard against the loose queries dragging in an unrelated game.
                 # Compare with spaces removed so "KillingFloor2Beta" still meets
                 # "Killing Floor 2".
                 a, b = got.replace(" ", ""), want.replace(" ", "")
                 if not (a and b and (a == b or a in b or b in a)):
                     continue
-                data = E.appdetails(appid)
-                if not data or data.get("type") != "game":
-                    continue
-                E.apply_steam(g, appid, data)
+                E.apply_steam(g, it)
                 fixed += 1
-                print("  + %-46s via %-28r -> %s" % (g["title"][:46], v[:28], data.get("name")))
+                print("  + %-46s via %-28r -> %s"
+                      % (g["title"][:46], v[:28], it.get("name")))
                 break
             if g.get("steam_appid"):
                 break
 
-        if not g.get("steam_appid") and resolve_via_wiki(g):
-            fixed += 1
-            print("  + %-46s via PCGamingWiki -> %s (%s)"
-                  % (g["title"][:46], g["matched_name"], g["steam_status"]))
+    fixed += wiki_pass(stuck)
 
     dupes = mark_duplicates(games)
 

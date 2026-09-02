@@ -5,7 +5,8 @@ import tempfile
 import unittest
 
 import steamlib
-from second_pass import mark_duplicates, resolve_via_wiki
+import steamstore
+from second_pass import mark_duplicates, wiki_pass
 
 
 def entry(title, appid=None, matched_name=None):
@@ -46,11 +47,17 @@ class TestMarkDuplicates(unittest.TestCase):
         self.assertNotIn("duplicate_of", only)
 
 
-DELISTED_DETAILS = {"type": "game", "name": "Horizon Chase Turbo", "is_free": False,
-                    "packages": [], "package_groups": [],
-                    "release_date": {"coming_soon": False, "date": "30 May, 2018"},
-                    "developers": ["AQUIRIS"], "publishers": ["AQUIRIS"],
-                    "genres": [{"description": "Racing"}], "categories": []}
+DELISTED_ITEM = {
+    "appid": 389140, "name": "Horizon Chase Turbo", "type": 0, "success": 1,
+    "visible": True, "unlisted": True,
+    "categories": {"supported_player_categoryids": [2]},
+    "reviews": {"summary_filtered": {"review_count": 5939, "percent_positive": 92,
+                                     "review_score_label": "Very Positive"}},
+    "basic_info": {"developers": [{"name": "AQUIRIS"}],
+                   "publishers": [{"name": "AQUIRIS"}]},
+    "release": {"steam_release_date": 1527638400},
+    "tags": [{"tagid": 699, "weight": 100}],
+}
 
 HAS_APPID = """{{Infobox game
 |steam appid  = 389140
@@ -63,7 +70,7 @@ NO_APPID = """{{Infobox game
 }}"""
 
 
-class TestResolveViaWiki(unittest.TestCase):
+class TestWikiPass(unittest.TestCase):
     """Drives the real fallback, answered from a seeded cache instead of the network."""
 
     def setUp(self):
@@ -72,6 +79,10 @@ class TestResolveViaWiki(unittest.TestCase):
         steamlib.CACHE = self.tmp
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.addCleanup(setattr, steamlib, "CACHE", real)
+        self.addCleanup(setattr, steamstore, "_TAGS", None)
+        self.addCleanup(setattr, steamstore, "_CATS", None)
+        steamstore._TAGS = {699: "Racing"}
+        steamstore._CATS = {2: "Single-player"}
 
     def seed(self, key, payload):
         with open(steamlib.cache_path(key), "w", encoding="utf-8") as fh:
@@ -85,26 +96,24 @@ class TestResolveViaWiki(unittest.TestCase):
     def test_pulls_the_scores_of_a_game_steam_no_longer_sells(self):
         """The whole point: a delisted game still has reviews, and they should count."""
         self.seed_wiki("Horizon Chase Turbo", "Horizon Chase Turbo", HAS_APPID)
-        self.seed("details_389140", {"389140": {"success": True, "data": DELISTED_DETAILS}})
-        self.seed("reviews_389140", {"success": 1, "query_summary": {
-            "total_reviews": 5939, "total_positive": 5493, "total_negative": 446,
-            "review_score_desc": "Very Positive"}})
+        self.seed("item_389140", DELISTED_ITEM)
 
         g = {"title": "Horizon Chase Turbo", "epic_developer": "AQUIRIS"}
-        self.assertTrue(resolve_via_wiki(g))
+        self.assertEqual(wiki_pass([g]), 1)
         self.assertEqual(g["steam_appid"], 389140)
         self.assertEqual(g["steam_status"], "delisted")
         self.assertEqual(g["steam_source"], "pcgw")
         self.assertEqual(g["reviews"], 5939)
-        self.assertAlmostEqual(g["rating"], 92.49, places=2)
+        self.assertEqual(g["rating"], 92.0)
         self.assertGreater(g["sort_score"], 90.0)
+        self.assertEqual(g["tags"], ["Racing"])
 
     def test_an_article_with_no_appid_means_never_on_steam(self):
         """Fortnite has a page; it has no Steam appid, and never did."""
         self.seed_wiki("Fortnite", "Fortnite", NO_APPID)
 
         g = {"title": "Fortnite", "epic_developer": "Epic Games"}
-        self.assertFalse(resolve_via_wiki(g))
+        self.assertEqual(wiki_pass([g]), 0)
         self.assertEqual(g["steam_status"], "not-on-steam")
         self.assertIsNone(g.get("steam_appid"))
 
@@ -115,8 +124,22 @@ class TestResolveViaWiki(unittest.TestCase):
                                               "missing": ""}}}})
 
         g = {"title": "Death Stranding Content", "epic_developer": ""}
-        self.assertFalse(resolve_via_wiki(g))
+        self.assertEqual(wiki_pass([g]), 0)
         self.assertEqual(g["steam_status"], "unknown")
+
+    def test_an_appid_steam_will_not_answer_for_stays_unknown(self):
+        """The wiki can name an appid for a game Steam has removed outright."""
+        self.seed_wiki("Gone Game", "Gone Game", HAS_APPID)
+        self.seed("item_389140", None)
+
+        g = {"title": "Gone Game", "epic_developer": ""}
+        self.assertEqual(wiki_pass([g]), 0)
+        self.assertEqual(g["steam_status"], "unknown")
+
+    def test_an_entry_that_already_matched_is_left_alone(self):
+        g = {"title": "Hades", "steam_appid": 1145360, "steam_status": "listed"}
+        self.assertEqual(wiki_pass([g]), 0)
+        self.assertEqual(g["steam_status"], "listed")
 
 
 if __name__ == "__main__":
