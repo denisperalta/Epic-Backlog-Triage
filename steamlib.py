@@ -1,5 +1,5 @@
 """Shared helpers: HTTP with cache + throttle, name normalisation, Wilson score."""
-import json, math, os, re, sys, time, urllib.parse, urllib.request, urllib.error
+import json, math, os, re, sys, time, urllib.request, urllib.error
 
 CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 # A fresh clone has no cache/ - it is generated, so it is not in the repository.

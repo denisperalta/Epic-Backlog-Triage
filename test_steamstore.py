@@ -30,7 +30,8 @@ class CacheDir(unittest.TestCase):
 
 def item(**over):
     """A store item shaped like a live paid game, as GetItems returns one."""
-    it = {"appid": 1145360, "name": "Hades", "type": steamstore.GAME, "success": 1,
+    it = {"appid": 1145360, "name": "Hades", "type": steamstore.GAME,
+          "item_type": steamstore.APP, "success": 1,
           "visible": True, "release": {"steam_release_date": 1600353507}}
     it.update(over)
     return it
@@ -64,6 +65,29 @@ class TestItemStatus(unittest.TestCase):
         self.assertEqual(steamstore.item_status(None), "unknown")
 
 
+class TestIsGame(unittest.TestCase):
+    """type alone cannot tell a game from a package or a bundle - item_type can."""
+
+    def test_rejects_a_package_even_though_type_says_game(self):
+        """The real crash: Steam sells "Borderlands 2 Game of the Year" as a
+        package with type: 0, and a package carries no appid at all."""
+        package = {"name": "Borderlands 2 Game of the Year",
+                   "type": steamstore.GAME, "item_type": 1, "success": 1}
+        self.assertFalse(steamstore.is_game(package))
+
+    def test_rejects_a_bundle(self):
+        self.assertFalse(steamstore.is_game(item(item_type=2)))
+
+    def test_rejects_dlc(self):
+        self.assertFalse(steamstore.is_game(item(type=steamstore.DLC)))
+
+    def test_rejects_an_item_steam_would_not_answer_for(self):
+        self.assertFalse(steamstore.is_game(item(success=15)))
+
+    def test_accepts_a_normal_game(self):
+        self.assertTrue(steamstore.is_game(item()))
+
+
 class TestLookups(CacheDir):
     def test_tag_ids_become_names(self):
         self.seed("steam_taglist",
@@ -84,7 +108,8 @@ class TestLookups(CacheDir):
 
 
 HADES = {
-    "appid": 1145360, "name": "Hades", "type": 0, "success": 1, "visible": True,
+    "appid": 1145360, "name": "Hades", "type": 0, "item_type": 0,
+    "success": 1, "visible": True,
     "categories": {"supported_player_categoryids": [2],
                    "feature_categoryids": [22, 29, 23],
                    "controller_categoryids": [28]},
@@ -240,6 +265,23 @@ class TestGetItems(CacheDir):
 
         steamstore.fetch_json = explode
         self.assertEqual(steamstore.get_items([267550]), {})
+
+    def test_a_hard_failure_does_not_poison_the_cache(self):
+        """None means the request never came back, not that Steam answered with
+        nothing - remembering it as a miss would leave every appid in the chunk
+        stuck at steam_status: unknown forever, including the delisted games the
+        wiki fallback exists to rescue.
+        """
+        self.addCleanup(setattr, steamstore, "fetch_json", steamstore.fetch_json)
+        steamstore.fetch_json = lambda url, **kw: None
+        self.assertEqual(steamstore.get_items([1145360]), {})
+        self.assertFalse(os.path.exists(steamlib.cache_path("item_1145360")))
+
+        steamstore.fetch_json = lambda url, **kw: {
+            "response": {"store_items": [HADES]}}
+        got = steamstore.get_items([1145360])
+        self.assertEqual(got[1145360]["name"], "Hades")
+        self.assertTrue(os.path.exists(steamlib.cache_path("item_1145360")))
 
     def test_duplicate_ids_are_asked_for_once(self):
         calls = []

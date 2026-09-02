@@ -100,12 +100,16 @@ def best(title, items):
 
     Search is ordered by Steam's idea of relevance, which is not ours: a query
     for a game returns its soundtrack, its season pass and its sequel too. Rank
-    on the normalised name instead, and take nothing that is not a game.
+    on the normalised name instead, and take nothing that is not a game -
+    including a package: Epic sells "Borderlands 2 Game of the Year", and
+    Steam has a *package* by that exact name, which would otherwise win
+    outright on an exact-name match and then crash item_fields() for lack of
+    an appid.
     """
     want, want_loose = normalise(title), normalise(title, True)
     ranked = []
     for it in items:
-        if it.get("success") != 1 or it.get("type") != steamstore.GAME:
+        if not steamstore.is_game(it):
             continue
         name = it.get("name") or ""
         n, nl = normalise(name), normalise(name, True)

@@ -39,6 +39,15 @@ BUCKET, DELAY = "storeapi", 0.3
 # rejected by search, and only the wiki fallback is allowed to accept a DLC.
 GAME, DLC = 0, 4
 
+# EStoreItemType - a different enum from EStoreAppType above, despite sharing
+# the value 0 for their respective "normal" case. `type` alone cannot tell a
+# game from a package or a bundle: Steam sells "Borderlands 2 Game of the Year"
+# as a package with that exact name and type: 0, and a package carries no
+# `appid` at all, so treating `type` as the only discriminator crashes
+# item_fields()'s int(item["appid"]) on the first Epic title that names one
+# outright. item_type tells packages (1) and bundles (2) apart from apps (0).
+APP = 0
+
 _TAGS = None
 _CATS = None
 
@@ -97,6 +106,24 @@ def item_status(item):
     if item.get("unlisted"):
         return "delisted"
     return "listed"
+
+
+def is_game(item):
+    """True only for an answered, real app, of type GAME, that carries an appid.
+
+    All four checks earn their place: `success` rejects an id Steam would not
+    answer for, `item_type` rejects the packages and bundles that also carry
+    `type: 0` (see APP above), `type` rejects DLC and soundtracks, and the
+    appid check is what actually guards item_fields()'s int(item["appid"]) -
+    a package such as "Borderlands 2 Game of the Year" clears `type` on its
+    own and needs item_type to be turned away, but the appid check is kept as
+    the last line of defence for whatever the next mis-typed item turns out
+    to be.
+    """
+    return bool(item) and (item.get("success") == 1
+                           and item.get("item_type") == APP
+                           and item.get("type") == GAME
+                           and item.get("appid") is not None)
 
 
 def _category_names(item):
@@ -234,6 +261,12 @@ def get_items(appids):
                    "data_request": DATA_REQUEST}
         d = fetch_json(_url("IStoreBrowseService", "GetItems", payload),
                        bucket=BUCKET, delay=DELAY)
+        if d is None:
+            # A hard transport failure after every retry, not an answer - "we
+            # do not know" must not be written down as a remembered miss, or
+            # every appid in the chunk is stuck at steam_status: unknown and
+            # never retried, delisted games included.
+            continue
         answered = {}
         for it in ((d or {}).get("response") or {}).get("store_items") or []:
             if it.get("success") == 1 and it.get("appid"):

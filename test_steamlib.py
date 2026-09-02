@@ -1,12 +1,11 @@
 """Tests for the disk cache behaviour of cached_json."""
 import json
-import os
 import shutil
 import tempfile
 import unittest
 
 import steamlib
-from steamlib import cached_json, fetch_json
+from steamlib import cached_json
 
 
 class TestCachedJson(unittest.TestCase):

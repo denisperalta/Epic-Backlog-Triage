@@ -156,7 +156,8 @@ tags and only the common ones are translated; the rest stay in English rather th
 out/report.html   the page you actually look at
 out/games.json    every field, one object per game
 out/games.csv     the same rows, for a spreadsheet
-cache/            one JSON file per HTTP response, plus your library dump
+cache/            one JSON file per appid (one GetItems call fans out into many),
+                  plus your library dump
 ```
 
 `out/` and `cache/` are both generated, and both are in `.gitignore` — your library never ends up in
@@ -277,7 +278,7 @@ test_*.py         unit tests: matching, delisting, the report and its two langua
 requirements.txt  legendary-gl (the scripts themselves are standard library only)
 LICENSE           MIT
 docs/             the screenshot at the top of this README
-cache/            one JSON file per HTTP response      (generated, git-ignored)
+cache/            one JSON file per appid, not per response  (generated, git-ignored)
 out/              games.json, games.csv, report.html   (generated, git-ignored)
 ```
 

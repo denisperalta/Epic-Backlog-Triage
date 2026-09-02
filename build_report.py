@@ -365,8 +365,8 @@ tbody tr:hover{background:var(--surface-2)}
 .name a[href]:hover{text-decoration:underline;color:var(--accent-ink)}
 .name .dev{color:var(--faint);font-size:11.5px;margin-top:2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.gen{display:flex;flex-wrap:wrap;gap:4px;min-width:150px;max-width:220px}
-.gen span{font-size:11px;color:var(--muted);background:var(--surface-2);
+.taglist{display:flex;flex-wrap:wrap;gap:4px;min-width:150px;max-width:220px}
+.taglist span{font-size:11px;color:var(--muted);background:var(--surface-2);
   border:1px solid var(--line);border-radius:999px;padding:1px 7px;white-space:nowrap}
 
 /* review bar: proportion positive, coloured by Steam's own tier */
@@ -627,8 +627,8 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   function passes(g){
     var q = $("q").value.trim().toLowerCase();
     if (q && g._hay.indexOf(q) === -1) return false;
-    var gen = $("tags").value;
-    if (gen && (g.tags || []).indexOf(gen) === -1) return false;
+    var tagFilter = $("tags").value;
+    if (tagFilter && (g.tags || []).indexOf(tagFilter) === -1) return false;
     var st = $("status").value;
     if (st && (g.steam_status || "unknown") !== st) return false;
     // The review floor is a browsing floor, and it would hide every row that has
@@ -699,7 +699,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
           '</b></td>' +
         '<td class="rate">' + rate + '</td>' +
         '<td class="num">' + (g.reviews ? nfmt(g.reviews) : '<span class="dash">&mdash;</span>') + '</td>' +
-        '<td><div class="gen">' + (g.tags || []).map(function(x){
+        '<td><div class="taglist">' + (g.tags || []).map(function(x){
             return '<span>' + esc(tagName(x)) + '</span>'; }).join('') + '</div></td>' +
         (N.hasHours ? '<td class="num">' +
           (g.hltb_main ? hrs(g.hltb_main) : '<span class="dash">&mdash;</span>') + '</td>' : '') +

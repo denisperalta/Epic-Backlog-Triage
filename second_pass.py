@@ -140,7 +140,7 @@ def main():
                 continue
             want = normalise(g["title"], True)
             for it in items[:3]:
-                if it.get("success") != 1 or it.get("type") != steamstore.GAME:
+                if not steamstore.is_game(it):
                     continue
                 got = normalise(it.get("name") or "", True)
                 # Guard against the loose queries dragging in an unrelated game.

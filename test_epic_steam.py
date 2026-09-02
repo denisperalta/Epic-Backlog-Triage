@@ -35,6 +35,15 @@ class TestBest(unittest.TestCase):
         items = [dict(hit(1, "Ghost"), success=15)]
         self.assertIsNone(epic_steam.best("Ghost", items))
 
+    def test_a_package_with_the_exact_name_is_never_the_answer(self):
+        """Epic sells "Borderlands 2 Game of the Year"; Steam has a *package*
+        by that exact name, type: 0 included, and it carries no appid at all -
+        taking it as the best match would crash item_fields() outright."""
+        package = {"name": "Borderlands 2 Game of the Year",
+                   "type": steamstore.GAME, "item_type": 1, "success": 1}
+        self.assertIsNone(
+            epic_steam.best("Borderlands 2 Game of the Year", [package]))
+
     def test_nothing_matching_is_none(self):
         self.assertIsNone(epic_steam.best("Hades", []))
 
