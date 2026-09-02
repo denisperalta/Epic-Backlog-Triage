@@ -29,10 +29,10 @@ EN = {
     "tile_gone_k": "Delisted on Steam",
     "tile_gone_n": "pulled from sale, still yours",
 
-    "ph_search": "Search title, genre or developer\u2026",
+    "ph_search": "Search title, tag or developer\u2026",
     "al_search": "Search",
-    "al_genre": "Filter by genre",
-    "opt_genres": "All genres",
+    "al_tags": "Filter by tag",
+    "opt_tags": "All tags",
     "al_status": "Filter by Steam listing",
     "st_any": "Any Steam status",
     "st_listed": "On Steam now",
@@ -47,7 +47,6 @@ EN = {
     "so_za": "Name, Z to A",
     "so_rating": "Steam rating, high first",
     "so_reviews": "Reviews, most first",
-    "so_mc": "Metacritic, high first",
     "so_new": "Year, newest first",
     "so_old": "Year, oldest first",
     "lbl_minr": "min reviews",
@@ -60,8 +59,7 @@ EN = {
     "th_conf": "Confidence",
     "th_rating": "Steam rating",
     "th_reviews": "Reviews",
-    "th_genre": "Genre",
-    "th_mc": "MC",
+    "th_tags": "Tags",
     "th_hours": "Hours",
     "th_year": "Year",
     "th_modes": "Modes",
@@ -86,7 +84,7 @@ EN = {
     "foot_hours": "Playtime is HowLongToBeat&rsquo;s main-story figure. ",
     "foot_nohours": "Playtime is not shown: HowLongToBeat now requires a browser session "
                     "fingerprint and refuses direct requests. ",
-    "foot": "Steam ratings, review counts, genres, Metacritic scores and player modes come "
+    "foot": "Steam ratings, review counts, tags and player modes come "
             "from Valve&rsquo;s own <code>appreviews</code> and <code>appdetails</code> "
             "endpoints, fetched {date}. {playtime}Steam&rsquo;s search only answers for games "
             "it currently sells, so anything it cannot find is looked up on PCGamingWiki "
@@ -122,10 +120,10 @@ ES = {
     "tile_gone_k": "Retirados de Steam",
     "tile_gone_n": "ya no se venden, y siguen siendo tuyos",
 
-    "ph_search": "Busca por t\u00edtulo, g\u00e9nero o desarrollador\u2026",
+    "ph_search": "Busca por t\u00edtulo, etiqueta o desarrollador\u2026",
     "al_search": "Buscar",
-    "al_genre": "Filtrar por g\u00e9nero",
-    "opt_genres": "Todos los g\u00e9neros",
+    "al_tags": "Filtrar por etiqueta",
+    "opt_tags": "Todas las etiquetas",
     "al_status": "Filtrar por estado en Steam",
     "st_any": "Cualquier estado en Steam",
     "st_listed": "Ahora en Steam",
@@ -140,7 +138,6 @@ ES = {
     "so_za": "Nombre, de la Z a la A",
     "so_rating": "Valoraci\u00f3n en Steam, de mayor a menor",
     "so_reviews": "Rese\u00f1as, de m\u00e1s a menos",
-    "so_mc": "Metacritic, de mayor a menor",
     "so_new": "A\u00f1o, del m\u00e1s reciente",
     "so_old": "A\u00f1o, del m\u00e1s antiguo",
     "lbl_minr": "rese\u00f1as m\u00edn.",
@@ -153,8 +150,7 @@ ES = {
     "th_conf": "Confianza",
     "th_rating": "Valoraci\u00f3n",
     "th_reviews": "Rese\u00f1as",
-    "th_genre": "G\u00e9nero",
-    "th_mc": "MC",
+    "th_tags": "Etiquetas",
     "th_hours": "Horas",
     "th_year": "A\u00f1o",
     "th_modes": "Modos",
@@ -180,9 +176,9 @@ ES = {
     "foot_hours": "La duraci\u00f3n es la de la historia principal seg\u00fan HowLongToBeat. ",
     "foot_nohours": "La duraci\u00f3n no se muestra: HowLongToBeat ahora exige la huella de "
                     "una sesi\u00f3n de navegador y rechaza las peticiones directas. ",
-    "foot": "Las valoraciones, el n\u00famero de rese\u00f1as, los g\u00e9neros, las "
-            "puntuaciones de Metacritic y los modos de juego vienen de los propios endpoints "
-            "<code>appreviews</code> y <code>appdetails</code> de Valve, consultados el "
+    "foot": "Las valoraciones, el n\u00famero de rese\u00f1as, las etiquetas y los modos de "
+            "juego vienen de los propios endpoints <code>appreviews</code> y "
+            "<code>appdetails</code> de Valve, consultados el "
             "{date}. {playtime}La b\u00fasqueda de Steam solo responde por los juegos que "
             "vende ahora mismo, as\u00ed que lo que no encuentra se busca en PCGamingWiki: "
             "{delisted} t\u00edtulos de esta lista est\u00e1n <b>retirados</b> &mdash; ya no "
@@ -198,10 +194,11 @@ ES = {
 
 I18N = {"en": EN, "es": ES}
 
-# Steam hands over genres and review tiers as English prose, so the Spanish page
+# Steam hands over tags and review tiers as English prose, so the Spanish page
 # needs its own names for them - Valve's own store wording. Anything absent here
-# falls through untranslated rather than vanishing from the page.
-GENRE_ES = {
+# falls through untranslated rather than vanishing from the page, which is what
+# most of the four hundred-odd tags do.
+TAG_ES = {
     "Action": "Acci\u00f3n",
     "Adventure": "Aventura",
     "Animation & Modeling": "Animaci\u00f3n y modelado",
@@ -382,8 +379,6 @@ tbody tr:hover{background:var(--surface-2)}
 .t4{color:var(--b4)} .t5{color:var(--b5)}
 .f1{background:var(--b1)} .f2{background:var(--b2)} .f3{background:var(--b3)}
 .f4{background:var(--b4)} .f5{background:var(--b5)}
-.mc{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
-  border-radius:5px;padding:2px 7px;color:var(--chip-ink);font-variant-numeric:tabular-nums}
 .mode{font-size:11px;color:var(--muted);white-space:nowrap;letter-spacing:.02em}
 .dash{color:var(--faint)}
 .tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;
@@ -426,9 +421,9 @@ tbody tr:hover{background:var(--surface-2)}
   <div class="bar">
     <div class="row1">
       <input type="search" id="q" data-i18n-ph="ph_search" data-i18n-al="al_search"
-             placeholder="Search title, genre or developer&hellip;" aria-label="Search">
-      <select id="genre" data-i18n-al="al_genre" aria-label="Filter by genre">
-        <option value="" data-i18n="opt_genres">All genres</option>__GENRES__
+             placeholder="Search title, tag or developer&hellip;" aria-label="Search">
+      <select id="tags" data-i18n-al="al_tags" aria-label="Filter by tag">
+        <option value="" data-i18n="opt_tags">All tags</option>__TAGS__
       </select>
       <select id="status" data-i18n-al="al_status" aria-label="Filter by Steam listing">
         <option value="" data-i18n="st_any">Any Steam status</option>
@@ -445,7 +440,6 @@ tbody tr:hover{background:var(--surface-2)}
         <option value="title|-1" data-i18n="so_za">Name, Z to A</option>
         <option value="rating|-1" data-i18n="so_rating">Steam rating, high first</option>
         <option value="reviews|-1" data-i18n="so_reviews">Reviews, most first</option>
-        <option value="metacritic|-1" data-i18n="so_mc">Metacritic, high first</option>
         <option value="year|-1" data-i18n="so_new">Year, newest first</option>
         <option value="year|1" data-i18n="so_old">Year, oldest first</option>
       </select>
@@ -468,8 +462,7 @@ tbody tr:hover{background:var(--surface-2)}
         <th data-k="sort_score" data-num="1"><span data-i18n="th_conf">Confidence</span> <span class="ar"></span></th>
         <th data-k="rating" data-num="1"><span data-i18n="th_rating">Steam rating</span> <span class="ar"></span></th>
         <th data-k="reviews" data-num="1"><span data-i18n="th_reviews">Reviews</span> <span class="ar"></span></th>
-        <th data-k="genres"><span data-i18n="th_genre">Genre</span> <span class="ar"></span></th>
-        <th data-k="metacritic" data-num="1"><span data-i18n="th_mc">MC</span> <span class="ar"></span></th>
+        <th data-k="tags"><span data-i18n="th_tags">Tags</span> <span class="ar"></span></th>
 __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Year</span> <span class="ar"></span></th>
         <th data-k="mode"><span data-i18n="th_modes">Modes</span> <span class="ar"></span></th>
       </tr></thead>
@@ -487,7 +480,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   "use strict";
   var GAMES = JSON.parse(document.getElementById("data").textContent);
   var I18N = __I18N__;
-  var GENRE = __GENRE_MAP__;
+  var TAG = __TAG_MAP__;
   var REVIEW = __REVIEW_MAP__;
   var N = __NUMS__;
   var STEPS = [0, 100, 500, 2000, 10000, 50000];
@@ -551,7 +544,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
       .toLocaleDateString(LOC, {day:"numeric", month:"long", year:"numeric"});
   }
   // Steam's own words for these, translated where we have a translation.
-  function genreName(g){ return (LANG === "es" && GENRE[g]) || g; }
+  function tagName(g){ return (LANG === "es" && TAG[g]) || g; }
   function reviewName(d){ return (LANG === "es" && REVIEW[d]) || d; }
   function tagFor(s){
     return s === "delisted" ? t("tag_delisted")
@@ -564,7 +557,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   GAMES.forEach(function(g){
     var d = (g.release_date || "").match(/(19|20)\d{2}/);
     g.year = d ? +d[0] : null;
-    g._base = ((g.title || "") + " " + (g.genres || []).join(" ") + " " +
+    g._base = ((g.title || "") + " " + (g.tags || []).join(" ") + " " +
                (g.developer || "") + " " + (g.publisher || "")).toLowerCase();
     // Steam's own review tiers, collapsed to five colour bands.
     var r = g.rating;
@@ -573,7 +566,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
 
   // Anything that reads as a sentence has to be rebuilt when the language changes -
   // including the two that are not visibly text: Modes is sorted on its own words,
-  // and the search box has to find a genre by the name actually on screen.
+  // and the search box has to find a tag by the name actually on screen.
   function retranslate(){
     V = {
       n: nfmt(N.count), rated: nfmt(N.rated), great: nfmt(N.great),
@@ -585,7 +578,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     GAMES.forEach(function(g){
       g.mode = [g.singleplayer ? t("mode_solo") : "", g.coop ? t("mode_coop") : "",
                 g.multiplayer ? t("mode_mp") : ""].filter(Boolean).join(" · ");
-      g._hay = g._base + " " + (g.genres || []).map(genreName).join(" ").toLowerCase();
+      g._hay = g._base + " " + (g.tags || []).map(tagName).join(" ").toLowerCase();
     });
   }
 
@@ -616,7 +609,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     });
     // Only the label changes: the option keeps its English value, so the filter in
     // passes() goes on comparing against what Steam actually sent.
-    each("#genre option", function(o){ if (o.value) o.textContent = genreName(o.value); });
+    each("#tags option", function(o){ if (o.value) o.textContent = tagName(o.value); });
     each(".lang button", function(o){
       o.setAttribute("aria-pressed", o.getAttribute("data-lang") === LANG ? "true" : "false");
     });
@@ -629,13 +622,11 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
 
   var sortKey = "sort_score", sortDir = -1;
 
-  function mcColour(s){ return s >= 75 ? "var(--b1)" : s >= 50 ? "var(--b3)" : "var(--b5)"; }
-
   function passes(g){
     var q = $("q").value.trim().toLowerCase();
     if (q && g._hay.indexOf(q) === -1) return false;
-    var gen = $("genre").value;
-    if (gen && (g.genres || []).indexOf(gen) === -1) return false;
+    var gen = $("tags").value;
+    if (gen && (g.tags || []).indexOf(gen) === -1) return false;
     var st = $("status").value;
     if (st && (g.steam_status || "unknown") !== st) return false;
     // The review floor is a browsing floor, and it would hide every row that has
@@ -655,7 +646,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     rows.sort(function(a, b){
       if (sortKey === "title") return a.title.localeCompare(b.title) * sortDir;
       var x = a[sortKey], y = b[sortKey];
-      // Genre and Modes hold lists and strings, not numbers.
+      // Tags and Modes hold lists and strings, not numbers.
       if (Array.isArray(x) || Array.isArray(y) ||
           typeof x === "string" || typeof y === "string") {
         var sx = Array.isArray(x) ? x.join(", ") : (x || "");
@@ -706,11 +697,8 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
           '</b></td>' +
         '<td class="rate">' + rate + '</td>' +
         '<td class="num">' + (g.reviews ? nfmt(g.reviews) : '<span class="dash">&mdash;</span>') + '</td>' +
-        '<td><div class="gen">' + (g.genres || []).map(function(x){
-            return '<span>' + esc(genreName(x)) + '</span>'; }).join('') + '</div></td>' +
-        '<td class="num">' + (g.metacritic
-            ? '<span class="mc" style="background:' + mcColour(g.metacritic) + '">' + g.metacritic + '</span>'
-            : '<span class="dash">&mdash;</span>') + '</td>' +
+        '<td><div class="gen">' + (g.tags || []).map(function(x){
+            return '<span>' + esc(tagName(x)) + '</span>'; }).join('') + '</div></td>' +
         (N.hasHours ? '<td class="num">' +
           (g.hltb_main ? hrs(g.hltb_main) : '<span class="dash">&mdash;</span>') + '</td>' : '') +
         // A year is a label, not a quantity: it must not pick up a thousands separator.
@@ -766,7 +754,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     if (p.length === 2) applySort(p[0], +p[1]);
   });
 
-  ["q", "genre", "status", "sp", "co", "pad"].forEach(function(id){
+  ["q", "tags", "status", "sp", "co", "pad"].forEach(function(id){
     $(id).addEventListener("input", render);
   });
   $("minr").addEventListener("input", function(){
@@ -774,7 +762,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     render();
   });
   $("reset").addEventListener("click", function(){
-    $("q").value = ""; $("genre").value = ""; $("status").value = "";
+    $("q").value = ""; $("tags").value = ""; $("status").value = "";
     $("minr").value = 1;
     $("minrv").textContent = nfmt(STEPS[1]);
     $("sp").checked = $("co").checked = $("pad").checked = false;
@@ -818,7 +806,7 @@ def _json(obj):
 
 
 def _esc(s):
-    """Steam genres carry ampersands - "Animation & Modeling" - so they need escaping."""
+    """Steam tags carry ampersands - "Animation & Modeling" - so they need escaping."""
     return (s.replace("&", "&amp;").replace("<", "&lt;")
              .replace(">", "&gt;").replace('"', "&quot;"))
 
@@ -855,14 +843,14 @@ def build():
         "stamp": datetime.date.today().isoformat(),
     }
 
-    genres = sorted({x for g in games for x in (g.get("genres") or [])})
-    opts = "".join('<option value="%s">%s</option>' % (_esc(g), _esc(g)) for g in genres)
+    tags = sorted({x for g in games for x in (g.get("tags") or [])})
+    opts = "".join('<option value="%s">%s</option>' % (_esc(t), _esc(t)) for t in tags)
 
     html = (TEMPLATE
-            .replace("__GENRES__", opts)
+            .replace("__TAGS__", opts)
             .replace("__HOURS_TH__", HOURS_TH if hours else "")
             .replace("__I18N__", _json(I18N))
-            .replace("__GENRE_MAP__", _json(GENRE_ES))
+            .replace("__TAG_MAP__", _json(TAG_ES))
             .replace("__REVIEW_MAP__", _json(REVIEW_ES))
             .replace("__NUMS__", _json(nums))
             .replace("__DATA__", _json(games)))
@@ -870,8 +858,8 @@ def build():
     path = os.path.join(OUT, "report.html")
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(html)
-    print("wrote %s  (%.0f KB, %d games, %d rated, %d genres)"
-          % (path, len(html) / 1024.0, len(games), len(rated), len(genres)))
+    print("wrote %s  (%.0f KB, %d games, %d rated, %d tags)"
+          % (path, len(html) / 1024.0, len(games), len(rated), len(tags)))
     # The headline answer, for anyone who runs this from run.bat and reads the
     # console rather than opening the page.
     print("      %d delisted on Steam, %d never on Steam, %d duplicate entries, "

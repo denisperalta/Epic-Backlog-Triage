@@ -40,7 +40,7 @@ class TestCatalogue(unittest.TestCase):
         for key, english in I18N["en"].items():
             spanish = I18N["es"][key]
             self.assertTrue(spanish.strip(), "%s has no Spanish at all" % key)
-            if key not in ("th_mc", "lang_en", "lang_es"):
+            if key not in ("lang_en", "lang_es"):
                 self.assertNotEqual(spanish, english, "%s was never translated" % key)
 
 
@@ -52,11 +52,12 @@ class TestDataLabels(unittest.TestCase):
                      "Very Negative", "Overwhelmingly Negative", "No user reviews"):
             self.assertIn(tier, build_report.REVIEW_ES)
 
-    def test_genres_seen_in_a_real_library_are_covered(self):
-        for genre in ("Action", "Adventure", "Casual", "Early Access", "Indie",
-                      "Massively Multiplayer", "RPG", "Racing", "Simulation",
-                      "Sports", "Strategy", "Animation & Modeling"):
-            self.assertIn(genre, build_report.GENRE_ES)
+    def test_tags_seen_in_a_real_library_are_covered(self):
+        """The overlap between Steam's tags and the genre names this map was built for."""
+        for tag in ("Action", "Adventure", "Casual", "Early Access", "Indie",
+                    "Massively Multiplayer", "RPG", "Racing", "Simulation",
+                    "Sports", "Strategy"):
+            self.assertIn(tag, build_report.TAG_ES)
 
 
 class TestBuild(unittest.TestCase):
@@ -69,10 +70,10 @@ class TestBuild(unittest.TestCase):
         with open(os.path.join(self.tmp, "games.json"), "w", encoding="utf-8") as fh:
             json.dump([{"title": "A Game", "steam_status": "listed", "rating": 92.5,
                         "reviews": 1200, "sort_score": 90.8, "review_desc": "Very Positive",
-                        "genres": ["Action"], "metacritic": 80, "release_date": "1 Jan, 2020",
+                        "tags": ["Action"], "release_date": "2020-01-01",
                         "developer": "Someone", "singleplayer": True},
                        {"title": "Gone Game", "steam_status": "delisted", "rating": None,
-                        "reviews": 0, "genres": []}], fh)
+                        "reviews": 0, "tags": []}], fh)
 
     def build(self):
         with contextlib.redirect_stdout(io.StringIO()):
