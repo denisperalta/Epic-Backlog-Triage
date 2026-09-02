@@ -119,26 +119,3 @@ def wilson_lower(pos, total, z=1.96):
     centre = (p + z * z / (2 * total)) / d
     margin = (z / d) * math.sqrt(p * (1 - p) / total + z * z / (4 * total * total))
     return max(0.0, (centre - margin) * 100.0)
-
-
-def steam_status(data):
-    """Classify a Steam store listing from an appdetails 'data' node.
-
-    Steam never says "delisted" outright, but it stops offering the game for
-    sale: a pulled title keeps its store page, its reviews and its metadata,
-    and loses every package, package group and price. Nothing else in the
-    library looks like that - free-to-play games have no packages either, so
-    they are separated by is_free, and an unannounced release date has to be
-    checked first or an unreleased game reads as a pulled one.
-
-    Returns "listed", "delisted", "unreleased", or "unknown" when appdetails
-    had nothing to say about the appid at all.
-    """
-    if not data:
-        return "unknown"
-    if (data.get("release_date") or {}).get("coming_soon"):
-        return "unreleased"
-    if (data.get("packages") or data.get("package_groups")
-            or data.get("price_overview") or data.get("is_free")):
-        return "listed"
-    return "delisted"

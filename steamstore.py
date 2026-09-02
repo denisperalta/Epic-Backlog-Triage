@@ -72,3 +72,27 @@ def category_names():
                  for c in (d.get("response") or {}).get("categories") or []
                  if c.get("categoryid") and c.get("display_name")}
     return _CATS
+
+
+def item_status(item):
+    """Classify a store item: listed, delisted, unreleased, or unknown.
+
+    Steam used to make this an inference - a pulled game kept its page and its
+    reviews but lost every package, so "nothing left to buy, and not free" meant
+    delisted. The store API says it outright with `unlisted`, and answers for a
+    pulled game the same way it answers for a live one.
+
+    Order matters: an unannounced game has no packages either, so coming_soon is
+    checked first, exactly as it was against appdetails.
+
+    "unknown" means Steam would not answer for the appid at all - a fully removed
+    app returns success 15 and no payload. Telling that apart from a game that was
+    never on Steam is PCGamingWiki's job, in second_pass.
+    """
+    if not item or item.get("success") != 1:
+        return "unknown"
+    if (item.get("release") or {}).get("is_coming_soon"):
+        return "unreleased"
+    if item.get("unlisted"):
+        return "delisted"
+    return "listed"
