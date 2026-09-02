@@ -19,6 +19,7 @@ Metacritic, so the report no longer shows it.
 """
 import json
 import os
+import time
 import urllib.parse
 
 from steamlib import cache_path, cached_json, fetch_json, normalise, wilson_lower
@@ -96,3 +97,91 @@ def item_status(item):
     if item.get("unlisted"):
         return "delisted"
     return "listed"
+
+
+def _category_names(item):
+    """Every category on the item, from the three lists it splits them across.
+
+    The union reproduces the flat list appdetails used to return, byte for byte -
+    checked against The Witcher 3, Dota 2 and Hades - so the mode predicates below
+    are the same ones, matching on names rather than on ids that Valve may reuse.
+    """
+    cats = item.get("categories") or {}
+    known = category_names()
+    return {known[i]
+            for key in ("supported_player_categoryids", "feature_categoryids",
+                        "controller_categoryids")
+            for i in (cats.get(key) or []) if i in known}
+
+
+def _top_tags(item, limit=3):
+    """The heaviest tags, named. `tags` is weight-ordered; `tagids` is not."""
+    known = tag_names()
+    out = []
+    for t in item.get("tags") or []:
+        name = known.get(t.get("tagid"))
+        if name and name not in out:
+            out.append(name)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _release_date(item):
+    """ISO, in UTC. Only the year is ever displayed, but ISO also sorts right.
+
+    steam_release_date is the date the store shows: for Hades that is the 1.0
+    release, not the early access one, which is what the old appdetails string
+    said too.
+    """
+    r = item.get("release") or {}
+    ts = (r.get("steam_release_date") or r.get("original_steam_release_date")
+          or r.get("original_release_date") or 0)
+    return time.strftime("%Y-%m-%d", time.gmtime(ts)) if ts else ""
+
+
+def item_fields(item):
+    """One store item, flattened onto the columns games.json carries.
+
+    Review counts are the store's *filtered* summary - the number the store page
+    itself shows. summary_unfiltered exists for only a minority of apps, so it is
+    not a usable source.
+
+    percent_positive is a whole number, so the positive/negative split is
+    reconstructed rather than reported. Integer arithmetic keeps it deterministic;
+    the half-percent of rounding moves the Wilson bound by under 0.02.
+    """
+    appid = int(item["appid"])
+    summary = (item.get("reviews") or {}).get("summary_filtered") or {}
+    total = summary.get("review_count") or 0
+    pct = summary.get("percent_positive") or 0
+    positive = (total * pct + 50) // 100
+    cats = _category_names(item)
+    info = item.get("basic_info") or {}
+
+    return dict(
+        steam_appid=appid,
+        matched_name=item.get("name"),
+        steam_status=item_status(item),
+        tags=_top_tags(item),
+        rating=float(pct) if total else None,
+        reviews=total,
+        positive=positive,
+        negative=total - positive,
+        sort_score=round(wilson_lower(positive, total), 2) if total else None,
+        # Valve's own wording for the empty case, which appreviews used to supply
+        # and which the report has a Spanish translation for.
+        review_desc=summary.get("review_score_label")
+        or ("" if total else "No user reviews"),
+        release_date=_release_date(item),
+        coming_soon=bool((item.get("release") or {}).get("is_coming_soon")),
+        developer=", ".join(d["name"] for d in info.get("developers") or []
+                            if d.get("name")),
+        publisher=", ".join(p["name"] for p in info.get("publishers") or []
+                            if p.get("name")),
+        singleplayer="Single-player" in cats,
+        multiplayer=any("Multi-player" in c or "PvP" in c for c in cats),
+        coop=any("Co-op" in c for c in cats),
+        controller="Full controller support" in cats,
+        steam_url="https://store.steampowered.com/app/%d/" % appid,
+    )
