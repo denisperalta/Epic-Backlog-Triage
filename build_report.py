@@ -362,14 +362,17 @@ h1 em{font-style:normal;color:var(--accent)}
 .sub b{color:var(--ink);font-weight:600}
 
 /* ---------- stat tiles ---------- */
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin:0 0 22px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:9px;
-  padding:13px 15px;box-shadow:var(--shadow)}
-.tile .k{font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint);
-  font-weight:600}
-.tile .v{font-family:var(--font-heading);font-weight:500;
-  font-size:27px;line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums}
-.tile .n{font-size:12px;color:var(--muted);margin-top:1px}
+.stats{display:flex;margin:22px 0 0;border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft)}
+.tile{flex:1;padding:14px 18px 15px;border-left:1px solid var(--line-soft);
+  background:none;border-radius:0;box-shadow:none}
+.tile:first-child{border-left:0;padding-left:0}
+.tile .k{font:600 9px/1 var(--font-body);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--faint)}
+.tile .v{font:500 26px/1.15 var(--font-heading);letter-spacing:-.03em;margin-top:7px;
+  font-variant-numeric:tabular-nums}
+.tile .n{font-size:11.5px;color:var(--muted);margin-top:2px}
+@media (max-width:900px){ .stats{flex-wrap:wrap} .tile{min-width:150px} }
 
 /* ---------- controls ---------- */
 input[type=search]{font:14px/1.2 var(--font-body);color:var(--ink);
