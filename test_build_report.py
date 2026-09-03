@@ -79,19 +79,36 @@ class TestTagFilter(unittest.TestCase):
 class TestBands(unittest.TestCase):
     """The five rating bands survive the mono palette, in both themes."""
 
-    BLOCKS = 3  # :root, [data-theme="light"], and the prefers-color-scheme block
+    DARK = (("b1", "#6aba77"), ("b2", "#8ab45d"), ("b3", "#b7a63d"),
+            ("b4", "#e08e53"), ("b5", "#e8847c"))
+    LIGHT = (("b1", "#397945"), ("b2", "#54752f"), ("b3", "#776a0a"),
+             ("b4", "#965726"), ("b5", "#9c4e49"))
 
-    def test_every_band_is_defined_in_every_theme_block(self):
-        for n in range(1, 6):
-            found = len(re.findall(r"--b%d:#[0-9a-f]{6}" % n, TEMPLATE))
-            self.assertEqual(found, self.BLOCKS,
-                             "--b%d is defined %d times, expected %d"
-                             % (n, found, self.BLOCKS))
+    def blocks(self):
+        """The three theme blocks, sliced out of the template by their selectors."""
+        starts = [TEMPLATE.index(":root{"),
+                  TEMPLATE.index(':root[data-theme="light"]{'),
+                  TEMPLATE.index("@media (prefers-color-scheme:light)")]
+        ends = starts[1:] + [TEMPLATE.index("*{box-sizing")]
+        self.assertEqual(starts, sorted(starts), "the theme blocks are out of order")
+        return [TEMPLATE[a:b] for a, b in zip(starts, ends)]
 
-    def test_the_dark_bands_are_the_derived_values(self):
-        for name, value in (("b1", "#6aba77"), ("b2", "#8ab45d"), ("b3", "#b7a63d"),
-                            ("b4", "#e08e53"), ("b5", "#e8847c")):
-            self.assertIn("--%s:%s" % (name, value), TEMPLATE)
+    def test_the_dark_block_carries_the_dark_bands(self):
+        dark = self.blocks()[0]
+        for name, value in self.DARK:
+            self.assertIn("--%s:%s" % (name, value), dark)
+
+    def test_both_light_blocks_carry_the_light_bands(self):
+        light, system = self.blocks()[1:]
+        for block, label in ((light, "data-theme"), (system, "prefers-color-scheme")):
+            for name, value in self.LIGHT:
+                self.assertIn("--%s:%s" % (name, value), block,
+                              "--%s is missing from the %s light block" % (name, label))
+
+    def test_no_band_carries_a_value_that_was_never_derived(self):
+        allowed = set(v for _, v in self.DARK) | set(v for _, v in self.LIGHT)
+        for found in re.findall(r"--b\d:(#[0-9a-f]{6})", TEMPLATE):
+            self.assertIn(found, allowed, "%s is not one of the derived band values" % found)
 
 
 class TestBuild(unittest.TestCase):
