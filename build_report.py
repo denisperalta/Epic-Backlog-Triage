@@ -261,7 +261,7 @@ REVIEW_ES = {
 
 # Only rendered when HowLongToBeat data survived the fetch, so it lives out here
 # rather than inside the template - the tests still see it as page markup.
-HOURS_TH = ('        <th data-k="hltb_main" data-num="1">'
+HOURS_TH = ('          <th data-k="hltb_main" data-num="1">'
             '<span data-i18n="th_hours">Hours</span> <span class="ar"></span></th>\n')
 
 TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
@@ -340,10 +340,32 @@ TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
 body{margin:0;background:var(--bg);color:var(--ink);
   font:14px/1.55 var(--font-body);
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:1300px;margin:0 auto;padding:30px 20px 80px}
+.wrap{display:flex;min-height:100vh;align-items:stretch}
+.rail{width:268px;flex:none;padding:22px 20px 28px;display:flex;flex-direction:column;
+  gap:20px;background:var(--surface-2);border-right:1px solid var(--line-soft);
+  position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 28px 26px}
+.rail .brand{display:flex;flex-direction:column;gap:3px}
+.rail .kicker{font:600 9.5px/1 var(--font-body);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent)}
+/* Not `.name` - that class is already the table's title cell. */
+.rail .brandname{font:500 19px/1.1 var(--font-body);letter-spacing:-.02em}
+.rail .meta{font:400 11.5px/1.4 var(--mono);color:var(--faint);margin-top:2px;
+  font-variant-numeric:tabular-nums}
+.rail h2{font:600 9.5px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 9px}
+@media (max-width:900px){
+  .wrap{display:block}
+  .rail{width:auto;height:auto;position:static;border-right:0;
+    border-bottom:1px solid var(--line-soft)}
+  .main{padding:0 16px 40px}
+}
 
 /* ---------- masthead ---------- */
 .mast{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;margin-bottom:22px}
+/* Groups the theme toggle with the language switcher so both sit right-aligned
+   as one unit, instead of the toggle sitting flush against the title block. */
+.mast .tools{display:flex;align-items:center;gap:10px;margin-left:auto;align-self:flex-start}
 h1{font-family:var(--font-heading);
   font-weight:500;font-size:clamp(29px,4.4vw,44px);line-height:1.02;letter-spacing:-.022em;
   margin:0;text-wrap:balance}
@@ -364,9 +386,6 @@ h1 em{font-style:normal;color:var(--accent)}
 .tile .n{font-size:12px;color:var(--muted);margin-top:1px}
 
 /* ---------- controls ---------- */
-.bar{position:sticky;top:0;z-index:20;background:var(--bg);
-  padding:11px 0 12px;border-bottom:1px solid var(--line);margin-bottom:2px}
-.row1{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
 input[type=search],select{font:14px/1.2 var(--font-body);color:var(--ink);
   background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 11px}
 input[type=search]{flex:1 1 180px;min-width:150px}
@@ -408,7 +427,7 @@ button.reset:hover{color:var(--ink);border-color:var(--muted)}
    instead of below the filter bar. Narrow screens trade sticky for scroll. */
 .scroll{background:var(--surface);border-top:1px solid var(--line);margin-top:6px}
 table{border-collapse:collapse;width:100%;min-width:1020px}
-thead th{position:sticky;top:var(--barh,56px);z-index:10;background:var(--surface-2);
+thead th{position:sticky;top:0;z-index:10;background:var(--surface-2);
   font-size:10.5px;letter-spacing:.085em;text-transform:uppercase;color:var(--faint);
   font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);
   cursor:pointer;white-space:nowrap;user-select:none}
@@ -454,7 +473,7 @@ tbody tr:hover{background:var(--surface-2)}
 .foot{display:block;margin-top:18px;font-size:12.5px;color:var(--faint);line-height:1.65;max-width:96ch}
 .foot code{font-family:var(--mono);font-size:11.5px}
 /* ---------- theme toggle ---------- */
-.theme{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;
+.theme{display:inline-flex;align-items:center;gap:7px;
   font:600 10.5px/1 var(--mono);letter-spacing:.1em;padding:8px 12px;cursor:pointer;
   border:1px solid var(--line);border-radius:var(--radius-md);background:transparent;
   color:var(--muted)}
@@ -462,7 +481,7 @@ tbody tr:hover{background:var(--surface-2)}
 .theme .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor}
 :root[data-theme="light"] .theme .dot{background:currentColor}
 /* ---------- language switcher ---------- */
-.lang{display:inline-flex;gap:2px;margin-left:auto;align-self:flex-start;padding:2px;
+.lang{display:inline-flex;gap:2px;padding:2px;
   background:var(--surface);border:1px solid var(--line);border-radius:8px;
   box-shadow:var(--shadow)}
 .lang button{font:600 12px/1 var(--mono);letter-spacing:.06em;
@@ -471,82 +490,83 @@ tbody tr:hover{background:var(--surface-2)}
 .lang button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
 
 @media (max-width:1080px){ .scroll{overflow-x:auto} thead th{top:0} }
-@media (max-width:640px){ .wrap{padding:20px 12px 60px} .bar{position:static} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
 <div class="wrap">
-  <div class="mast">
-    <div>
-      <h1 data-i18n-html="h1">What should I <em>actually</em> play?</h1>
-      <p class="sub" data-i18n-html="sub">Games in the Epic library, pulled with <code>legendary</code>
-      and scored against live Steam review data.</p>
-    </div>
-    <button type="button" id="theme" class="theme" data-i18n-al="al_theme"></button>
-    <div class="lang" role="group" data-i18n-al="al_lang" aria-label="Language">
-      <button type="button" data-lang="es" data-i18n="lang_es">ES</button>
-      <button type="button" data-lang="en" data-i18n="lang_en">EN</button>
-    </div>
-  </div>
-
-  <div class="stats" id="stats"></div>
-
-  <div class="bar">
-    <div class="row1">
-      <input type="search" id="q" data-i18n-ph="ph_search" data-i18n-al="al_search"
-             placeholder="Search title, tag or developer&hellip;" aria-label="Search">
-      <select id="tags" data-i18n-al="al_tags" aria-label="Filter by tag">
-        <option value="" data-i18n="opt_tags">Add a tag&hellip;</option>__TAGS__
-      </select>
-      <select id="status" data-i18n-al="al_status" aria-label="Filter by Steam listing">
-        <option value="" data-i18n="st_any">Any Steam status</option>
-        <option value="listed" data-i18n="st_listed">On Steam now</option>
-        <option value="delisted" data-i18n="st_delisted">Delisted from Steam</option>
-        <option value="not-on-steam" data-i18n="st_not">Never on Steam</option>
-        <option value="duplicate" data-i18n="st_dup">Duplicate entry</option>
-        <option value="unreleased" data-i18n="st_unreleased">Not released yet</option>
-        <option value="unknown" data-i18n="st_unknown">Unidentified</option>
-      </select>
-      <select id="sort" data-i18n-al="al_sort" aria-label="Sort by">
-        <option value="sort_score|-1" data-i18n="so_conf">Confidence, high first</option>
-        <option value="title|1" data-i18n="so_az">Name, A to Z</option>
-        <option value="title|-1" data-i18n="so_za">Name, Z to A</option>
-        <option value="rating|-1" data-i18n="so_rating">Steam rating, high first</option>
-        <option value="reviews|-1" data-i18n="so_reviews">Reviews, most first</option>
-        <option value="year|-1" data-i18n="so_new">Year, newest first</option>
-        <option value="year|1" data-i18n="so_old">Year, oldest first</option>
-      </select>
-      <label class="rng"><span data-i18n="lbl_minr">min reviews</span>
-        <input type="range" id="minr" min="0" max="5" step="1" value="1"
-               data-i18n-al="al_minr" aria-label="Minimum review count"><b id="minrv">100</b></label>
-      <label class="chk"><input type="checkbox" id="sp"> <span data-i18n="mode_solo">Solo</span></label>
-      <label class="chk"><input type="checkbox" id="co"> <span data-i18n="mode_coop">Co-op</span></label>
-      <label class="chk"><input type="checkbox" id="pad"> <span data-i18n="chk_pad">Controller</span></label>
-      <button class="reset" id="reset" type="button" data-i18n="btn_reset">Reset</button>
-      <span class="count" id="count"><b>0</b> shown</span>
-    </div>
+  <aside class="rail">
+    <input type="search" id="q" data-i18n-ph="ph_search" data-i18n-al="al_search"
+           placeholder="Search title, tag or developer&hellip;" aria-label="Search">
+    <select id="tags" data-i18n-al="al_tags" aria-label="Filter by tag">
+      <option value="" data-i18n="opt_tags">Add a tag&hellip;</option>__TAGS__
+    </select>
+    <select id="status" data-i18n-al="al_status" aria-label="Filter by Steam listing">
+      <option value="" data-i18n="st_any">Any Steam status</option>
+      <option value="listed" data-i18n="st_listed">On Steam now</option>
+      <option value="delisted" data-i18n="st_delisted">Delisted from Steam</option>
+      <option value="not-on-steam" data-i18n="st_not">Never on Steam</option>
+      <option value="duplicate" data-i18n="st_dup">Duplicate entry</option>
+      <option value="unreleased" data-i18n="st_unreleased">Not released yet</option>
+      <option value="unknown" data-i18n="st_unknown">Unidentified</option>
+    </select>
+    <select id="sort" data-i18n-al="al_sort" aria-label="Sort by">
+      <option value="sort_score|-1" data-i18n="so_conf">Confidence, high first</option>
+      <option value="title|1" data-i18n="so_az">Name, A to Z</option>
+      <option value="title|-1" data-i18n="so_za">Name, Z to A</option>
+      <option value="rating|-1" data-i18n="so_rating">Steam rating, high first</option>
+      <option value="reviews|-1" data-i18n="so_reviews">Reviews, most first</option>
+      <option value="year|-1" data-i18n="so_new">Year, newest first</option>
+      <option value="year|1" data-i18n="so_old">Year, oldest first</option>
+    </select>
+    <label class="rng"><span data-i18n="lbl_minr">min reviews</span>
+      <input type="range" id="minr" min="0" max="5" step="1" value="1"
+             data-i18n-al="al_minr" aria-label="Minimum review count"><b id="minrv">100</b></label>
+    <label class="chk"><input type="checkbox" id="sp"> <span data-i18n="mode_solo">Solo</span></label>
+    <label class="chk"><input type="checkbox" id="co"> <span data-i18n="mode_coop">Co-op</span></label>
+    <label class="chk"><input type="checkbox" id="pad"> <span data-i18n="chk_pad">Controller</span></label>
+    <button class="reset" id="reset" type="button" data-i18n="btn_reset">Reset</button>
+    <span class="count" id="count"><b>0</b> shown</span>
     <div class="row2" id="chips" hidden role="group" data-i18n-al="al_chips"
          aria-label="Tags being filtered on"></div>
-  </div>
+  </aside>
 
-  <div class="scroll">
-    <table>
-      <thead><tr>
-        <th data-k="rank" style="cursor:default">#</th>
-        <th data-k="title"><span data-i18n="th_game">Game</span> <span class="ar"></span></th>
-        <th data-k="sort_score" data-num="1"><span data-i18n="th_conf">Confidence</span> <span class="ar"></span></th>
-        <th data-k="rating" data-num="1"><span data-i18n="th_rating">Steam rating</span> <span class="ar"></span></th>
-        <th data-k="reviews" data-num="1"><span data-i18n="th_reviews">Reviews</span> <span class="ar"></span></th>
-        <th data-k="tags"><span data-i18n="th_tags">Tags</span> <span class="ar"></span></th>
-__HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Year</span> <span class="ar"></span></th>
-        <th data-k="mode"><span data-i18n="th_modes">Modes</span> <span class="ar"></span></th>
-      </tr></thead>
-      <tbody id="body"></tbody>
-    </table>
-  </div>
-  <div id="none" class="empty" hidden data-i18n="empty">Nothing matches those filters.</div>
+  <main class="main">
+    <div class="mast">
+      <div>
+        <h1 data-i18n-html="h1">What should I <em>actually</em> play?</h1>
+        <p class="sub" data-i18n-html="sub">Games in the Epic library, pulled with <code>legendary</code>
+        and scored against live Steam review data.</p>
+      </div>
+      <div class="tools">
+        <button type="button" id="theme" class="theme" data-i18n-al="al_theme"></button>
+        <div class="lang" role="group" data-i18n-al="al_lang" aria-label="Language">
+          <button type="button" data-lang="es" data-i18n="lang_es">ES</button>
+          <button type="button" data-lang="en" data-i18n="lang_en">EN</button>
+        </div>
+      </div>
+    </div>
 
-  <p class="foot" id="foot"></p>
+    <div class="stats" id="stats"></div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th data-k="rank" style="cursor:default">#</th>
+          <th data-k="title"><span data-i18n="th_game">Game</span> <span class="ar"></span></th>
+          <th data-k="sort_score" data-num="1"><span data-i18n="th_conf">Confidence</span> <span class="ar"></span></th>
+          <th data-k="rating" data-num="1"><span data-i18n="th_rating">Steam rating</span> <span class="ar"></span></th>
+          <th data-k="reviews" data-num="1"><span data-i18n="th_reviews">Reviews</span> <span class="ar"></span></th>
+          <th data-k="tags"><span data-i18n="th_tags">Tags</span> <span class="ar"></span></th>
+__HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Year</span> <span class="ar"></span></th>
+          <th data-k="mode"><span data-i18n="th_modes">Modes</span> <span class="ar"></span></th>
+        </tr></thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+    <div id="none" class="empty" hidden data-i18n="empty">Nothing matches those filters.</div>
+
+    <p class="foot" id="foot"></p>
+  </main>
 </div>
 
 <script id="data" type="application/json">__DATA__</script>
@@ -720,7 +740,6 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     tiles();
     $("foot").innerHTML = t("foot");
     render();
-    syncBar();
     applyTheme(THEME);
   }
 
@@ -934,19 +953,6 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   each(".lang button", function(b){
     b.addEventListener("click", function(){ applyLang(b.getAttribute("data-lang")); });
   });
-
-  // The filter bar wraps to a second row at narrow widths and grows again when
-  // the webfont swaps in, so the sticky header's offset has to track its real
-  // height rather than be measured once. Switching language moves it too.
-  var bar = document.querySelector(".bar");
-  function syncBar(){
-    document.documentElement.style.setProperty(
-      "--barh", Math.ceil(bar.getBoundingClientRect().height) + "px");
-  }
-  if (window.ResizeObserver) new ResizeObserver(syncBar).observe(bar);
-  window.addEventListener("resize", syncBar);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncBar);
-  syncBar();
 
   applyTheme(savedTheme());
   applyLang(preferred());

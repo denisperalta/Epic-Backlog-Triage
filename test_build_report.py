@@ -201,5 +201,15 @@ class TestThemeToggle(unittest.TestCase):
         self.assertIn('localStorage.setItem("eb.theme"', TEMPLATE)
 
 
+class TestLayout(unittest.TestCase):
+    def test_the_page_is_a_rail_beside_a_main_column(self):
+        self.assertIn('<aside class="rail">', TEMPLATE)
+        self.assertIn('<main class="main">', TEMPLATE)
+
+    def test_the_horizontal_filter_bar_is_gone(self):
+        self.assertNotIn('class="bar"', TEMPLATE)
+        self.assertNotIn('class="row1"', TEMPLATE)
+
+
 if __name__ == "__main__":
     unittest.main()
