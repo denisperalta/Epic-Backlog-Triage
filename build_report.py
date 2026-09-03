@@ -261,7 +261,7 @@ HOURS_TH = ('        <th data-k="hltb_main" data-num="1">'
 TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 :root{
   /* Nocturne tokens, inlined from the design system's styles.css. */
@@ -329,18 +329,18 @@ TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);
-  font:15px/1.55 "IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  font:14px/1.55 var(--font-body);
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:1300px;margin:0 auto;padding:30px 20px 80px}
 
 /* ---------- masthead ---------- */
 .mast{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;margin-bottom:22px}
-h1{font-family:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
-  font-weight:800;font-size:clamp(29px,4.4vw,44px);line-height:1.02;letter-spacing:-.022em;
+h1{font-family:var(--font-heading);
+  font-weight:500;font-size:clamp(29px,4.4vw,44px);line-height:1.02;letter-spacing:-.022em;
   margin:0;text-wrap:balance}
 h1 em{font-style:normal;color:var(--accent)}
 .sub{color:var(--muted);font-size:14px;max-width:64ch;margin:9px 0 0}
-.sub code{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12.5px;
+.sub code{font-family:var(--mono);font-size:12.5px;
   background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
 .sub b{color:var(--ink);font-weight:600}
 
@@ -350,7 +350,7 @@ h1 em{font-style:normal;color:var(--accent)}
   padding:13px 15px;box-shadow:var(--shadow)}
 .tile .k{font-size:10.5px;letter-spacing:.10em;text-transform:uppercase;color:var(--faint);
   font-weight:600}
-.tile .v{font-family:"Bricolage Grotesque",ui-sans-serif,sans-serif;font-weight:700;
+.tile .v{font-family:var(--font-heading);font-weight:500;
   font-size:27px;line-height:1.15;margin-top:5px;font-variant-numeric:tabular-nums}
 .tile .n{font-size:12px;color:var(--muted);margin-top:1px}
 
@@ -358,7 +358,7 @@ h1 em{font-style:normal;color:var(--accent)}
 .bar{position:sticky;top:0;z-index:20;background:var(--bg);
   padding:11px 0 12px;border-bottom:1px solid var(--line);margin-bottom:2px}
 .row1{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
-input[type=search],select{font:14px/1.2 "IBM Plex Sans",sans-serif;color:var(--ink);
+input[type=search],select{font:14px/1.2 var(--font-body);color:var(--ink);
   background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 11px}
 input[type=search]{flex:1 1 180px;min-width:150px}
 select{cursor:pointer}
@@ -373,23 +373,23 @@ input:focus-visible,select:focus-visible,button:focus-visible,th:focus-visible{
 .rng{display:inline-flex;align-items:center;gap:8px;background:var(--surface);
   border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:13.5px;color:var(--muted)}
 .rng input{accent-color:var(--accent);width:86px}
-.rng b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-weight:600;
+.rng b{font-family:var(--mono);color:var(--ink);font-weight:600;
   font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
 .row2{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
 .row2[hidden]{display:none}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
   color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);
   border-radius:999px;padding:4px 6px 4px 11px}
-.chip button{font:600 14px/1 "IBM Plex Sans",sans-serif;color:inherit;background:none;
+.chip button{font:600 14px/1 var(--font-body);color:inherit;background:none;
   border:0;border-radius:999px;width:18px;height:18px;padding:0;cursor:pointer;opacity:.65}
 .chip button:hover{opacity:1;background:rgba(128,128,128,.22)}
-button.clear{font:13px "IBM Plex Sans",sans-serif;background:none;border:0;
+button.clear{font:13px var(--font-body);background:none;border:0;
   color:var(--muted);padding:4px 6px;cursor:pointer;text-decoration:underline;
   text-underline-offset:3px}
 button.clear:hover{color:var(--ink)}
 .count{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
 .count b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
-button.reset{font:13.5px "IBM Plex Sans",sans-serif;background:none;border:1px solid var(--line);
+button.reset{font:13.5px var(--font-body);background:none;border:1px solid var(--line);
   color:var(--muted);border-radius:7px;padding:8px 11px;cursor:pointer}
 button.reset:hover{color:var(--ink);border-color:var(--muted)}
 
@@ -409,7 +409,7 @@ thead th .ar{opacity:.55;font-size:9px;margin-left:3px}
 tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:hover{background:var(--surface-2)}
-.num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;
   font-size:13px;text-align:right;white-space:nowrap}
 .rank{color:var(--faint);font-size:12px;width:46px}
 .name{min-width:236px;max-width:340px}
@@ -425,7 +425,7 @@ tbody tr:hover{background:var(--surface-2)}
 /* review bar: proportion positive, coloured by Steam's own tier */
 .rate{min-width:152px}
 .rate .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.rate .pct{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;
+.rate .pct{font-family:var(--mono);font-size:13px;font-weight:600;
   font-variant-numeric:tabular-nums}
 .rate .desc{font-size:10.5px;color:var(--faint);text-align:right;line-height:1.2}
 .rate .track{height:4px;background:var(--track);border-radius:3px;margin-top:5px;overflow:hidden}
@@ -443,12 +443,12 @@ tbody tr:hover{background:var(--surface-2)}
 .tag.gone{color:var(--b4);border-color:var(--b4);background:transparent}
 .empty{padding:52px 20px;text-align:center;color:var(--muted)}
 .foot{display:block;margin-top:18px;font-size:12.5px;color:var(--faint);line-height:1.65;max-width:96ch}
-.foot code{font-family:"IBM Plex Mono",monospace;font-size:11.5px}
+.foot code{font-family:var(--mono);font-size:11.5px}
 /* ---------- language switcher ---------- */
 .lang{display:inline-flex;gap:2px;margin-left:auto;align-self:flex-start;padding:2px;
   background:var(--surface);border:1px solid var(--line);border-radius:8px;
   box-shadow:var(--shadow)}
-.lang button{font:600 12px/1 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.06em;
+.lang button{font:600 12px/1 var(--mono);letter-spacing:.06em;
   background:none;border:0;border-radius:6px;padding:7px 11px;color:var(--muted);cursor:pointer}
 .lang button:hover{color:var(--ink)}
 .lang button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}

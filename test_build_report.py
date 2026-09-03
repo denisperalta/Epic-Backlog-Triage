@@ -147,6 +147,14 @@ class TestTheme(unittest.TestCase):
         self.assertIn("@media (prefers-color-scheme:light)", TEMPLATE)
         self.assertIn(':root:not([data-theme="dark"])', TEMPLATE)
 
+    def test_only_inter_is_fetched(self):
+        self.assertIn("family=Inter", TEMPLATE)
+        for dead in ("Bricolage", "IBM+Plex", "IBM Plex"):
+            self.assertNotIn(dead, TEMPLATE, "%s is still referenced" % dead)
+
+    def test_numerals_use_a_system_mono_stack(self):
+        self.assertIn("--mono:ui-monospace", TEMPLATE)
+
 
 if __name__ == "__main__":
     unittest.main()
