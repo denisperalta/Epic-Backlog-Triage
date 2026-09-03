@@ -76,6 +76,24 @@ class TestTagFilter(unittest.TestCase):
         self.assertRegex(TEMPLATE, r"ACTIVE\[i\]\) === -1\) return false")
 
 
+class TestBands(unittest.TestCase):
+    """The five rating bands survive the mono palette, in both themes."""
+
+    BLOCKS = 3  # :root, [data-theme="light"], and the prefers-color-scheme block
+
+    def test_every_band_is_defined_in_every_theme_block(self):
+        for n in range(1, 6):
+            found = len(re.findall(r"--b%d:#[0-9a-f]{6}" % n, TEMPLATE))
+            self.assertEqual(found, self.BLOCKS,
+                             "--b%d is defined %d times, expected %d"
+                             % (n, found, self.BLOCKS))
+
+    def test_the_dark_bands_are_the_derived_values(self):
+        for name, value in (("b1", "#6aba77"), ("b2", "#8ab45d"), ("b3", "#b7a63d"),
+                            ("b4", "#e08e53"), ("b5", "#e8847c")):
+            self.assertIn("--%s:%s" % (name, value), TEMPLATE)
+
+
 class TestBuild(unittest.TestCase):
     """The report still renders, and renders whole."""
 
