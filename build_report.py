@@ -264,33 +264,68 @@ TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
 <style>
 :root{
-  --bg:#f4f4f8; --surface:#ffffff; --surface-2:#fafafb;
-  --ink:#191b22; --muted:#6a6e80; --faint:#9296a8;
-  --line:#e3e4ec; --line-soft:#eeeff4;
-  --accent:#a75f10; --accent-soft:#f5e7d3; --accent-ink:#7d460a;
-  --b1:#2f8f5b; --b2:#6d9f34; --b3:#bd9418; --b4:#c46a2f; --b5:#bb4030;
-  --track:#e9eaf1; --chip-ink:#ffffff;
-  --shadow:0 1px 2px rgba(25,27,34,.06),0 10px 26px -18px rgba(25,27,34,.30);
+  /* Nocturne tokens, inlined from the design system's styles.css. */
+  --color-bg:#161826; --color-surface:#232532; --color-text:#e9e9ed;
+  --color-accent:#9184d9; --color-accent-2:#a7a1db;
+  --color-divider:color-mix(in srgb,#e9e9ed 16%,transparent);
+  --color-neutral-100:#f3f5fe; --color-neutral-200:#e4e7f5; --color-neutral-300:#cfd3e5;
+  --color-neutral-400:#b2b6ca; --color-neutral-500:#9397ab; --color-neutral-600:#75798c;
+  --color-neutral-700:#595d6c; --color-neutral-800:#3f424d; --color-neutral-900:#292b31;
+  --color-accent-100:#f5f4ff; --color-accent-200:#e7e5fe; --color-accent-300:#d2cefd;
+  --color-accent-400:#b5abfc; --color-accent-500:#968ae0; --color-accent-600:#796cbf;
+  --color-accent-700:#5d5294; --color-accent-800:#423a6a; --color-accent-900:#2b2741;
+  --font-heading:"Inter",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --space-2:5.6px; --space-3:8.4px; --space-4:11.2px; --space-6:16.8px; --space-8:22.4px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:14px;
+  --shadow-md:0 0 0 1px #595d6c,0 6px 18px rgba(0,0,0,.55);
+
+  /* The report's own roles, aliased onto the tokens. Dark is the default. */
+  --bg:var(--color-bg); --surface:var(--color-surface);
+  --surface-2:var(--color-neutral-900);
+  --ink:var(--color-text); --muted:var(--color-neutral-500);
+  --faint:var(--color-neutral-600);
+  --line:var(--color-divider);
+  --line-soft:color-mix(in srgb,var(--color-text) 7%,transparent);
+  --accent:var(--color-accent);
+  --accent-soft:color-mix(in srgb,var(--color-accent) 14%,transparent);
+  --accent-ink:var(--color-accent-400);
+  --track:var(--color-neutral-800); --chip-ink:var(--color-accent-100);
+  --shadow:var(--shadow-md);
 }
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#111218; --surface:#191b22; --surface-2:#1e202a;
-    --ink:#e9eaf0; --muted:#969bad; --faint:#6d7285;
-    --line:#2a2d38; --line-soft:#22252f;
-    --accent:#e9a54a; --accent-soft:#3a2c17; --accent-ink:#f0b968;
-    --b1:#4bb87a; --b2:#8fc44a; --b3:#d9b23c; --b4:#e08a4e; --b5:#dd6152;
-    --track:#272a35; --chip-ink:#14161c;
-    --shadow:0 1px 2px rgba(0,0,0,.40),0 10px 26px -18px rgba(0,0,0,.70);
+/* The light theme inverts onto the accent ramps - no new colours. */
+:root[data-theme="light"]{
+  --bg:var(--color-accent-200); --surface:var(--color-accent-100);
+  --surface-2:color-mix(in srgb,var(--color-accent-200) 78%,var(--color-accent-300));
+  --ink:var(--color-neutral-900); --muted:var(--color-neutral-800);
+  --faint:var(--color-neutral-600);
+  --line:color-mix(in srgb,var(--color-neutral-900) 15%,transparent);
+  --line-soft:color-mix(in srgb,var(--color-neutral-900) 7%,transparent);
+  --accent:var(--color-accent-600);
+  --accent-soft:color-mix(in srgb,var(--color-accent-600) 12%,transparent);
+  --accent-ink:var(--color-accent-700);
+  --track:color-mix(in srgb,var(--color-neutral-900) 10%,transparent);
+  --chip-ink:var(--color-accent-100);
+  --shadow:0 1px 2px color-mix(in srgb,var(--color-neutral-900) 6%,transparent),
+           0 12px 30px -18px color-mix(in srgb,var(--color-neutral-900) 45%,transparent);
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:var(--color-accent-200); --surface:var(--color-accent-100);
+    --surface-2:color-mix(in srgb,var(--color-accent-200) 78%,var(--color-accent-300));
+    --ink:var(--color-neutral-900); --muted:var(--color-neutral-800);
+    --faint:var(--color-neutral-600);
+    --line:color-mix(in srgb,var(--color-neutral-900) 15%,transparent);
+    --line-soft:color-mix(in srgb,var(--color-neutral-900) 7%,transparent);
+    --accent:var(--color-accent-600);
+    --accent-soft:color-mix(in srgb,var(--color-accent-600) 12%,transparent);
+    --accent-ink:var(--color-accent-700);
+    --track:color-mix(in srgb,var(--color-neutral-900) 10%,transparent);
+    --chip-ink:var(--color-accent-100);
+    --shadow:0 1px 2px color-mix(in srgb,var(--color-neutral-900) 6%,transparent),
+             0 12px 30px -18px color-mix(in srgb,var(--color-neutral-900) 45%,transparent);
   }
-}
-:root[data-theme="dark"]{
-  --bg:#111218; --surface:#191b22; --surface-2:#1e202a;
-  --ink:#e9eaf0; --muted:#969bad; --faint:#6d7285;
-  --line:#2a2d38; --line-soft:#22252f;
-  --accent:#e9a54a; --accent-soft:#3a2c17; --accent-ink:#f0b968;
-  --b1:#4bb87a; --b2:#8fc44a; --b3:#d9b23c; --b4:#e08a4e; --b5:#dd6152;
-  --track:#272a35; --chip-ink:#14161c;
-  --shadow:0 1px 2px rgba(0,0,0,.40),0 10px 26px -18px rgba(0,0,0,.70);
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);

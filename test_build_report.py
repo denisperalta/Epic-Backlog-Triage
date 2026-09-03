@@ -124,5 +124,29 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(nums["delisted"], 1)
 
 
+class TestTheme(unittest.TestCase):
+    """The page is built on the Nocturne tokens, dark by default."""
+
+    def test_the_nocturne_tokens_are_inlined(self):
+        for token in ("--color-bg:#161826", "--color-text:#e9e9ed",
+                      "--color-accent:#9184d9", "--color-accent-200:#e7e5fe",
+                      "--color-neutral-900:#292b31"):
+            self.assertIn(token, TEMPLATE, "%s is missing from the token block" % token)
+
+    def test_the_report_roles_alias_onto_the_tokens(self):
+        for alias in ("--bg:var(--color-bg)", "--ink:var(--color-text)",
+                      "--line:var(--color-divider)", "--accent:var(--color-accent)"):
+            self.assertIn(alias, TEMPLATE, "%s is not aliased onto a token" % alias)
+
+    def test_the_old_hand_rolled_palette_is_gone(self):
+        for dead in ("#a75f10", "#f4f4f8", "#191b22", "#e9a54a"):
+            self.assertNotIn(dead, TEMPLATE, "%s survived the restyle" % dead)
+
+    def test_dark_is_the_default_and_light_is_the_override(self):
+        self.assertIn(':root[data-theme="light"]', TEMPLATE)
+        self.assertIn("@media (prefers-color-scheme:light)", TEMPLATE)
+        self.assertIn(':root:not([data-theme="dark"])', TEMPLATE)
+
+
 if __name__ == "__main__":
     unittest.main()
