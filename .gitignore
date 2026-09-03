@@ -7,6 +7,9 @@ out/
 # Memoised HTTP responses + the dump of your own Epic library
 cache/
 
+# Personal, uncommitted agent instructions
+CLAUDE.local.md
+
 # Python
 __pycache__/
 *.py[cod]
