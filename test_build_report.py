@@ -60,6 +60,22 @@ class TestDataLabels(unittest.TestCase):
             self.assertIn(tag, build_report.TAG_ES)
 
 
+class TestTagFilter(unittest.TestCase):
+    """The page filters on a list of tags, not on one."""
+
+    def test_the_dropdown_invites_adding_rather_than_replacing(self):
+        self.assertNotIn("All tags", I18N["en"]["opt_tags"])
+        self.assertNotIn("Todas las etiquetas", I18N["es"]["opt_tags"])
+
+    def test_the_select_is_not_a_native_multiple(self):
+        """A 200-tag <select multiple> in a sticky bar is the thing we avoided."""
+        self.assertNotIn("multiple", re.search(r'<select id="tags".*?>', TEMPLATE).group(0))
+
+    def test_every_active_tag_has_to_match(self):
+        """AND, not OR: each tag added narrows the list further."""
+        self.assertRegex(TEMPLATE, r"ACTIVE\[i\]\) === -1\) return false")
+
+
 class TestBuild(unittest.TestCase):
     """The report still renders, and renders whole."""
 
@@ -90,6 +106,15 @@ class TestBuild(unittest.TestCase):
         self.assertIn('data-lang="en"', html)
         for key in ("th_game", "btn_reset"):
             self.assertIn(I18N["es"][key], html)
+
+    def test_the_tag_filter_ships_a_chip_row_and_an_add_prompt(self):
+        """Tags are picked one at a time and stack up as chips, so the dropdown
+        is an "add" control and the active tags live somewhere else."""
+        html = self.build()
+        self.assertIn('id="chips"', html)
+        self.assertIn('<option value="Action">Action</option>', html)
+        for lang in ("en", "es"):
+            self.assertIn(I18N[lang]["opt_tags"], html)
 
     def test_the_counts_reach_the_page_as_numbers(self):
         html = self.build()

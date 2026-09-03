@@ -32,7 +32,10 @@ EN = {
     "ph_search": "Search title, tag or developer\u2026",
     "al_search": "Search",
     "al_tags": "Filter by tag",
-    "opt_tags": "All tags",
+    "opt_tags": "Add a tag\u2026",
+    "al_chips": "Tags being filtered on",
+    "al_chip_remove": "Stop filtering by {tag}",
+    "chip_clear": "Clear tags",
     "al_status": "Filter by Steam listing",
     "st_any": "Any Steam status",
     "st_listed": "On Steam now",
@@ -124,7 +127,10 @@ ES = {
     "ph_search": "Busca por t\u00edtulo, etiqueta o desarrollador\u2026",
     "al_search": "Buscar",
     "al_tags": "Filtrar por etiqueta",
-    "opt_tags": "Todas las etiquetas",
+    "opt_tags": "A\u00f1adir etiqueta\u2026",
+    "al_chips": "Etiquetas por las que se filtra",
+    "al_chip_remove": "Dejar de filtrar por {tag}",
+    "chip_clear": "Quitar etiquetas",
     "al_status": "Filtrar por estado en Steam",
     "st_any": "Cualquier estado en Steam",
     "st_listed": "Ahora en Steam",
@@ -334,6 +340,18 @@ input:focus-visible,select:focus-visible,button:focus-visible,th:focus-visible{
 .rng input{accent-color:var(--accent);width:86px}
 .rng b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-weight:600;
   font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+.row2{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
+.row2[hidden]{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);
+  border-radius:999px;padding:4px 6px 4px 11px}
+.chip button{font:600 14px/1 "IBM Plex Sans",sans-serif;color:inherit;background:none;
+  border:0;border-radius:999px;width:18px;height:18px;padding:0;cursor:pointer;opacity:.65}
+.chip button:hover{opacity:1;background:rgba(128,128,128,.22)}
+button.clear{font:13px "IBM Plex Sans",sans-serif;background:none;border:0;
+  color:var(--muted);padding:4px 6px;cursor:pointer;text-decoration:underline;
+  text-underline-offset:3px}
+button.clear:hover{color:var(--ink)}
 .count{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
 .count b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 button.reset{font:13.5px "IBM Plex Sans",sans-serif;background:none;border:1px solid var(--line);
@@ -425,7 +443,7 @@ tbody tr:hover{background:var(--surface-2)}
       <input type="search" id="q" data-i18n-ph="ph_search" data-i18n-al="al_search"
              placeholder="Search title, tag or developer&hellip;" aria-label="Search">
       <select id="tags" data-i18n-al="al_tags" aria-label="Filter by tag">
-        <option value="" data-i18n="opt_tags">All tags</option>__TAGS__
+        <option value="" data-i18n="opt_tags">Add a tag&hellip;</option>__TAGS__
       </select>
       <select id="status" data-i18n-al="al_status" aria-label="Filter by Steam listing">
         <option value="" data-i18n="st_any">Any Steam status</option>
@@ -454,6 +472,8 @@ tbody tr:hover{background:var(--surface-2)}
       <button class="reset" id="reset" type="button" data-i18n="btn_reset">Reset</button>
       <span class="count" id="count"><b>0</b> shown</span>
     </div>
+    <div class="row2" id="chips" hidden role="group" data-i18n-al="al_chips"
+         aria-label="Tags being filtered on"></div>
   </div>
 
   <div class="scroll">
@@ -612,6 +632,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     // Only the label changes: the option keeps its English value, so the filter in
     // passes() goes on comparing against what Steam actually sent.
     each("#tags option", function(o){ if (o.value) o.textContent = tagName(o.value); });
+    chips();
     each(".lang button", function(o){
       o.setAttribute("aria-pressed", o.getAttribute("data-lang") === LANG ? "true" : "false");
     });
@@ -624,11 +645,48 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
 
   var sortKey = "sort_score", sortDir = -1;
 
+  // The tags being filtered on, held as the English names Steam sent - the same
+  // values the options carry, so the filter survives a language switch.
+  var ACTIVE = [];
+
+  function chips(){
+    var box = $("chips");
+    box.hidden = !ACTIVE.length;
+    box.innerHTML = ACTIVE.map(function(tag){
+      var name = esc(tagName(tag));
+      return '<span class="chip">' + name +
+             '<button type="button" data-tag="' + esc(tag) + '" aria-label="' +
+             esc(t("al_chip_remove", {tag: tagName(tag)})) + '">×</button></span>';
+    }).join("") + (ACTIVE.length > 1
+      ? '<button type="button" class="clear" data-clear="1">' + esc(t("chip_clear")) +
+        '</button>'
+      : "");
+  }
+
+  // An option already added would filter to nothing on a second pick, so it
+  // leaves the list until its chip is removed.
+  function offer(tag, on){
+    each("#tags option", function(o){
+      if (o.value === tag) { o.hidden = !on; o.disabled = !on; }
+    });
+  }
+
+  function drop(tag){
+    var i = ACTIVE.indexOf(tag);
+    if (i === -1) return;
+    ACTIVE.splice(i, 1);
+    offer(tag, true);
+    chips();
+    render();
+  }
+
   function passes(g){
     var q = $("q").value.trim().toLowerCase();
     if (q && g._hay.indexOf(q) === -1) return false;
-    var tagFilter = $("tags").value;
-    if (tagFilter && (g.tags || []).indexOf(tagFilter) === -1) return false;
+    var mine = g.tags || [];
+    for (var i = 0; i < ACTIVE.length; i++) {
+      if (mine.indexOf(ACTIVE[i]) === -1) return false;
+    }
     var st = $("status").value;
     if (st && (g.steam_status || "unknown") !== st) return false;
     // The review floor is a browsing floor, and it would hide every row that has
@@ -756,8 +814,28 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     if (p.length === 2) applySort(p[0], +p[1]);
   });
 
-  ["q", "tags", "status", "sp", "co", "pad"].forEach(function(id){
+  ["q", "status", "sp", "co", "pad"].forEach(function(id){
     $(id).addEventListener("input", render);
+  });
+  $("tags").addEventListener("change", function(){
+    var tag = this.value;
+    this.value = "";                     // back to the prompt, ready for the next one
+    if (!tag || ACTIVE.indexOf(tag) !== -1) return;
+    ACTIVE.push(tag);
+    offer(tag, false);
+    chips();
+    render();
+  });
+  $("chips").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button") : null;
+    if (!b) return;
+    if (b.dataset.clear) {
+      ACTIVE.splice(0).forEach(function(tag){ offer(tag, true); });
+      chips();
+      render();
+    } else if (b.dataset.tag) {
+      drop(b.dataset.tag);
+    }
   });
   $("minr").addEventListener("input", function(){
     $("minrv").textContent = nfmt(STEPS[+this.value]);
@@ -765,6 +843,8 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   });
   $("reset").addEventListener("click", function(){
     $("q").value = ""; $("tags").value = ""; $("status").value = "";
+    ACTIVE.splice(0).forEach(function(tag){ offer(tag, true); });
+    chips();
     $("minr").value = 1;
     $("minrv").textContent = nfmt(STEPS[1]);
     $("sp").checked = $("co").checked = $("pad").checked = false;

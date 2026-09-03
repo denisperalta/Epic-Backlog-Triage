@@ -134,11 +134,17 @@ Everything is inside the one file: no server, no build step, no dependencies. Op
 mail it to yourself, carry it on a stick. The only thing it asks the network for is its webfonts,
 and every rule names a system fallback, so offline it just looks slightly plainer.
 
-**The filters stack.** The search box matches title, tag, developer and publisher; the two
-dropdowns narrow by tag and by Steam status; the *min reviews* slider steps through 0, 100, 500,
-2,000, 10,000 and 50,000, and opens at 100; Solo, Co-op and Controller keep only the games that
-declare support for them. **Reset** clears the lot. Sort from the dropdown or by clicking a column
+**The filters stack.** The search box matches title, tag, developer and publisher; the status
+dropdown narrows by Steam listing; the *min reviews* slider steps through 0, 100, 500, 2,000,
+10,000 and 50,000, and opens at 100; Solo, Co-op and Controller keep only the games that declare
+support for them. **Reset** clears the lot. Sort from the dropdown or by clicking a column
 heading, and click it again to flip the direction.
+
+**Tags stack too, and they narrow.** Pick one from *Add a tag* and it becomes a chip under the
+filter bar; pick another and you get the games carrying **both**, not either. So *Action* plus
+*Open World* is the eleven open-world action games, not the hundred-odd that are one or the other.
+Each chip has an x, *Clear tags* drops them all at once, and a tag already added leaves the
+dropdown so it cannot be picked twice.
 
 **English or Spanish.** The page opens in whichever language your browser asks for — on Windows
 that follows the system display language — and the `ES`/`EN` switch at the top right overrides it.
@@ -146,8 +152,9 @@ The choice is remembered in that browser for next time. Switching translates the
 tag names and its review tiers (*Very Positive* becomes *Muy positivas*), and reformats numbers
 and dates for the locale: 308,000 reviews become 308.000, 92.50% becomes 92,50 %, and the fetch
 date in the footer is written out the Spanish way. Titles, developers and publishers are left
-alone — they are names, not text. Filtering and sorting are unaffected: the tag dropdown shows
-translated names but still matches on what Steam actually sent. Steam has some four hundred
+alone — they are names, not text. Filtering and sorting are unaffected: the tag dropdown and the
+chips show translated names but still match on what Steam actually sent, so switching language
+mid-filter keeps the same rows on screen. Steam has some four hundred
 tags and only the common ones are translated; the rest stay in English rather than disappear.
 
 ## What lands where
