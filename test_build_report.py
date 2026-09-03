@@ -63,17 +63,25 @@ class TestDataLabels(unittest.TestCase):
 class TestTagFilter(unittest.TestCase):
     """The page filters on a list of tags, not on one."""
 
-    def test_the_dropdown_invites_adding_rather_than_replacing(self):
-        self.assertNotIn("All tags", I18N["en"]["opt_tags"])
-        self.assertNotIn("Todas las etiquetas", I18N["es"]["opt_tags"])
-
-    def test_the_select_is_not_a_native_multiple(self):
-        """A 200-tag <select multiple> in a sticky bar is the thing we avoided."""
-        self.assertNotIn("multiple", re.search(r'<select id="tags".*?>', TEMPLATE).group(0))
-
     def test_every_active_tag_has_to_match(self):
         """AND, not OR: each tag added narrows the list further."""
         self.assertRegex(TEMPLATE, r"ACTIVE\[i\]\) === -1\) return false")
+
+
+class TestRailControls(unittest.TestCase):
+    """The rail's filters are buttons; the column headers do the sorting."""
+
+    def test_the_selects_are_gone(self):
+        for dead in ('<select id="tags"', '<select id="status"', '<select id="sort"'):
+            self.assertNotIn(dead, TEMPLATE, "%s survived" % dead)
+
+    def test_the_tag_filter_is_a_chip_rail(self):
+        self.assertIn('id="tagchips"', TEMPLATE)
+        self.assertIn('id="chips"', TEMPLATE)
+
+    def test_status_rows_carry_a_whole_library_count(self):
+        self.assertIn('id="statuslist"', TEMPLATE)
+        self.assertIn("__STATUS_N__", TEMPLATE)
 
 
 class TestBands(unittest.TestCase):
@@ -142,14 +150,19 @@ class TestBuild(unittest.TestCase):
         for key in ("th_game", "btn_reset"):
             self.assertIn(I18N["es"][key], html)
 
-    def test_the_tag_filter_ships_a_chip_row_and_an_add_prompt(self):
-        """Tags are picked one at a time and stack up as chips, so the dropdown
-        is an "add" control and the active tags live somewhere else."""
+    def test_the_tag_list_reaches_the_page_as_json(self):
+        """The chip rail reads an array: option markup there would throw on load."""
         html = self.build()
-        self.assertIn('id="chips"', html)
-        self.assertIn('<option value="Action">Action</option>', html)
-        for lang in ("en", "es"):
-            self.assertIn(I18N[lang]["opt_tags"], html)
+        self.assertEqual(json.loads(re.search(r"var TAGS = (\[.*?\]);", html).group(1)),
+                         ["Action"])
+
+    def test_the_status_counts_reach_the_page_as_numbers(self):
+        html = self.build()
+        counts = json.loads(re.search(r"var STATUS_N = (\{.*?\});", html).group(1))
+        # The fixture is one listed game and one delisted game.
+        self.assertEqual(counts["listed"], 1)
+        self.assertEqual(counts["delisted"], 1)
+        self.assertEqual(counts[""], 2)
 
     def test_the_counts_reach_the_page_as_numbers(self):
         html = self.build()
@@ -209,6 +222,11 @@ class TestLayout(unittest.TestCase):
     def test_the_horizontal_filter_bar_is_gone(self):
         self.assertNotIn('class="bar"', TEMPLATE)
         self.assertNotIn('class="row1"', TEMPLATE)
+
+    def test_no_sticky_bar_machinery_survives(self):
+        """The filter bar is gone; a stray syncBar call would blank the page."""
+        for dead in ("syncBar", "--barh"):
+            self.assertNotIn(dead, TEMPLATE)
 
 
 if __name__ == "__main__":

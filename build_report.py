@@ -34,12 +34,11 @@ EN = {
 
     "ph_search": "Search title, tag or developer\u2026",
     "al_search": "Search",
-    "al_tags": "Filter by tag",
-    "opt_tags": "Add a tag\u2026",
+    "f_tags": "Tags",
     "al_chips": "Tags being filtered on",
     "al_chip_remove": "Stop filtering by {tag}",
     "chip_clear": "Clear tags",
-    "al_status": "Filter by Steam listing",
+    "f_status": "Steam status",
     "st_any": "Any Steam status",
     "st_listed": "On Steam now",
     "st_delisted": "Delisted from Steam",
@@ -47,18 +46,12 @@ EN = {
     "st_dup": "Duplicate entry",
     "st_unreleased": "Not released yet",
     "st_unknown": "Unidentified",
-    "al_sort": "Sort by",
-    "so_conf": "Confidence, high first",
-    "so_az": "Name, A to Z",
-    "so_za": "Name, Z to A",
-    "so_rating": "Steam rating, high first",
-    "so_reviews": "Reviews, most first",
-    "so_new": "Year, newest first",
-    "so_old": "Year, oldest first",
-    "lbl_minr": "min reviews",
+    "f_minr": "Min reviews",
     "al_minr": "Minimum review count",
+    "f_modes": "Modes",
     "chk_pad": "Controller",
     "btn_reset": "Reset",
+    "railmeta": "{n} titles · {steam} on Steam",
     "count": "<b>{n}</b> shown",
 
     "th_game": "Game",
@@ -132,12 +125,11 @@ ES = {
 
     "ph_search": "Busca por t\u00edtulo, etiqueta o desarrollador\u2026",
     "al_search": "Buscar",
-    "al_tags": "Filtrar por etiqueta",
-    "opt_tags": "A\u00f1adir etiqueta\u2026",
+    "f_tags": "Etiquetas",
     "al_chips": "Etiquetas por las que se filtra",
     "al_chip_remove": "Dejar de filtrar por {tag}",
     "chip_clear": "Quitar etiquetas",
-    "al_status": "Filtrar por estado en Steam",
+    "f_status": "Estado en Steam",
     "st_any": "Cualquier estado en Steam",
     "st_listed": "Ahora en Steam",
     "st_delisted": "Retirado de Steam",
@@ -145,18 +137,12 @@ ES = {
     "st_dup": "Entrada duplicada",
     "st_unreleased": "A\u00fan sin lanzar",
     "st_unknown": "Sin identificar",
-    "al_sort": "Ordenar por",
-    "so_conf": "Confianza, de mayor a menor",
-    "so_az": "Nombre, de la A a la Z",
-    "so_za": "Nombre, de la Z a la A",
-    "so_rating": "Valoraci\u00f3n en Steam, de mayor a menor",
-    "so_reviews": "Rese\u00f1as, de m\u00e1s a menos",
-    "so_new": "A\u00f1o, del m\u00e1s reciente",
-    "so_old": "A\u00f1o, del m\u00e1s antiguo",
-    "lbl_minr": "rese\u00f1as m\u00edn.",
+    "f_minr": "Rese\u00f1as m\u00edn.",
     "al_minr": "N\u00famero m\u00ednimo de rese\u00f1as",
+    "f_modes": "Modos",
     "chk_pad": "Mando",
     "btn_reset": "Restablecer",
+    "railmeta": "{n} t\u00edtulos \u00b7 {steam} en Steam",
     "count": "<b>{n}</b> a la vista",
 
     "th_game": "Juego",
@@ -386,23 +372,32 @@ h1 em{font-style:normal;color:var(--accent)}
 .tile .n{font-size:12px;color:var(--muted);margin-top:1px}
 
 /* ---------- controls ---------- */
-input[type=search],select{font:14px/1.2 var(--font-body);color:var(--ink);
-  background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 11px}
-input[type=search]{flex:1 1 180px;min-width:150px}
-select{cursor:pointer}
-input:focus-visible,select:focus-visible,button:focus-visible,th:focus-visible{
+input[type=search]{font:14px/1.2 var(--font-body);color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 11px;
+  /* A rail is a column: a flex-basis here would stretch the box down the page. */
+  width:100%;flex:none}
+input:focus-visible,button:focus-visible,th:focus-visible{
   outline:2px solid var(--accent);outline-offset:2px}
-.chk{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--muted);
-  background:var(--surface);border:1px solid var(--line);border-radius:7px;
-  padding:8px 10px;cursor:pointer;user-select:none}
-.chk input{accent-color:var(--accent);margin:0;cursor:pointer}
-.chk:has(input:checked){color:var(--accent-ink);border-color:var(--accent);
-  background:var(--accent-soft);font-weight:500}
-.rng{display:inline-flex;align-items:center;gap:8px;background:var(--surface);
-  border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:13.5px;color:var(--muted)}
-.rng input{accent-color:var(--accent);width:86px}
-.rng b{font-family:var(--mono);color:var(--ink);font-weight:600;
-  font-variant-numeric:tabular-nums;min-width:52px;text-align:right}
+input[type=range]{accent-color:var(--accent);width:100%;margin:0}
+#minrv{display:block;margin-top:5px;font:600 12.5px/1 var(--mono);color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.chiprail{display:flex;flex-wrap:wrap;gap:5px}
+.chiprail button{font:400 11.5px/1 var(--font-body);padding:6px 9px;
+  border-radius:var(--radius-sm);cursor:pointer;background:transparent;
+  color:var(--muted);border:1px solid var(--line)}
+.chiprail button:hover{border-color:var(--accent)}
+.chiprail button[aria-pressed="true"]{background:var(--accent-soft);
+  color:var(--accent-ink);border-color:var(--accent)}
+.statuslist{display:flex;flex-direction:column;gap:5px}
+.statuslist button{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;
+  border:0;border-radius:var(--radius-sm);cursor:pointer;text-align:left;
+  background:transparent;color:var(--muted);font:400 12.5px/1.2 var(--font-body)}
+.statuslist button:hover{background:var(--accent-soft)}
+.statuslist button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
+.statuslist .dot{width:5px;height:5px;flex:none;border-radius:50%;background:var(--faint)}
+.statuslist button[aria-pressed="true"] .dot{background:var(--accent)}
+.statuslist .n{margin-left:auto;font:400 11px/1 var(--mono);color:var(--faint);
+  font-variant-numeric:tabular-nums}
 .row2{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
 .row2[hidden]{display:none}
 .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
@@ -415,7 +410,7 @@ button.clear{font:13px var(--font-body);background:none;border:0;
   color:var(--muted);padding:4px 6px;cursor:pointer;text-decoration:underline;
   text-underline-offset:3px}
 button.clear:hover{color:var(--ink)}
-.count{margin-left:auto;font-size:13px;color:var(--muted);white-space:nowrap}
+.count{margin-top:10px;font-size:13px;color:var(--muted);white-space:nowrap}
 .count b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 button.reset{font:13.5px var(--font-body);background:none;border:1px solid var(--line);
   color:var(--muted);border-radius:7px;padding:8px 11px;cursor:pointer}
@@ -495,39 +490,40 @@ tbody tr:hover{background:var(--surface-2)}
 
 <div class="wrap">
   <aside class="rail">
+    <div class="brand">
+      <div class="kicker">Epic backlog</div>
+      <div class="brandname">Triage</div>
+      <div class="meta" id="railmeta"></div>
+    </div>
+
     <input type="search" id="q" data-i18n-ph="ph_search" data-i18n-al="al_search"
            placeholder="Search title, tag or developer&hellip;" aria-label="Search">
-    <select id="tags" data-i18n-al="al_tags" aria-label="Filter by tag">
-      <option value="" data-i18n="opt_tags">Add a tag&hellip;</option>__TAGS__
-    </select>
-    <select id="status" data-i18n-al="al_status" aria-label="Filter by Steam listing">
-      <option value="" data-i18n="st_any">Any Steam status</option>
-      <option value="listed" data-i18n="st_listed">On Steam now</option>
-      <option value="delisted" data-i18n="st_delisted">Delisted from Steam</option>
-      <option value="not-on-steam" data-i18n="st_not">Never on Steam</option>
-      <option value="duplicate" data-i18n="st_dup">Duplicate entry</option>
-      <option value="unreleased" data-i18n="st_unreleased">Not released yet</option>
-      <option value="unknown" data-i18n="st_unknown">Unidentified</option>
-    </select>
-    <select id="sort" data-i18n-al="al_sort" aria-label="Sort by">
-      <option value="sort_score|-1" data-i18n="so_conf">Confidence, high first</option>
-      <option value="title|1" data-i18n="so_az">Name, A to Z</option>
-      <option value="title|-1" data-i18n="so_za">Name, Z to A</option>
-      <option value="rating|-1" data-i18n="so_rating">Steam rating, high first</option>
-      <option value="reviews|-1" data-i18n="so_reviews">Reviews, most first</option>
-      <option value="year|-1" data-i18n="so_new">Year, newest first</option>
-      <option value="year|1" data-i18n="so_old">Year, oldest first</option>
-    </select>
-    <label class="rng"><span data-i18n="lbl_minr">min reviews</span>
+
+    <div>
+      <h2 id="h-tags" data-i18n="f_tags">Tags</h2>
+      <div class="chiprail" id="tagchips" role="group" aria-labelledby="h-tags"></div>
+      <div class="row2" id="chips" hidden role="group" data-i18n-al="al_chips"
+           aria-label="Tags being filtered on"></div>
+    </div>
+
+    <div>
+      <h2 id="h-status" data-i18n="f_status">Steam status</h2>
+      <div id="statuslist" class="statuslist" role="group" aria-labelledby="h-status"></div>
+    </div>
+
+    <div>
+      <h2 id="h-minr" data-i18n="f_minr">Min reviews</h2>
       <input type="range" id="minr" min="0" max="5" step="1" value="1"
-             data-i18n-al="al_minr" aria-label="Minimum review count"><b id="minrv">100</b></label>
-    <label class="chk"><input type="checkbox" id="sp"> <span data-i18n="mode_solo">Solo</span></label>
-    <label class="chk"><input type="checkbox" id="co"> <span data-i18n="mode_coop">Co-op</span></label>
-    <label class="chk"><input type="checkbox" id="pad"> <span data-i18n="chk_pad">Controller</span></label>
+             data-i18n-al="al_minr" aria-label="Minimum review count">
+      <b id="minrv">100</b>
+    </div>
+
+    <div>
+      <h2 id="h-modes" data-i18n="f_modes">Modes</h2>
+      <div class="chiprail" id="modechips" role="group" aria-labelledby="h-modes"></div>
+    </div>
+
     <button class="reset" id="reset" type="button" data-i18n="btn_reset">Reset</button>
-    <span class="count" id="count"><b>0</b> shown</span>
-    <div class="row2" id="chips" hidden role="group" data-i18n-al="al_chips"
-         aria-label="Tags being filtered on"></div>
   </aside>
 
   <main class="main">
@@ -564,6 +560,7 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
       </table>
     </div>
     <div id="none" class="empty" hidden data-i18n="empty">Nothing matches those filters.</div>
+    <span class="count" id="count"><b>0</b> shown</span>
 
     <p class="foot" id="foot"></p>
   </main>
@@ -578,6 +575,10 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
   var TAG = __TAG_MAP__;
   var REVIEW = __REVIEW_MAP__;
   var N = __NUMS__;
+  var TAGS = __TAGS__;
+  // Whole-library counts, one per status - they describe the library, not the view,
+  // so they are counted once in Python and never recomputed from the filtered rows.
+  var STATUS_N = __STATUS_N__;
   var STEPS = [0, 100, 500, 2000, 10000, 50000];
   var ENT = {"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;"};
   var LANG = "en", LOC = "en-US", V = {};
@@ -729,10 +730,15 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
     each("[data-i18n-al]", function(o){
       o.setAttribute("aria-label", t(o.getAttribute("data-i18n-al")));
     });
-    // Only the label changes: the option keeps its English value, so the filter in
-    // passes() goes on comparing against what Steam actually sent.
-    each("#tags option", function(o){ if (o.value) o.textContent = tagName(o.value); });
+    // The chips and the three control groups are built from I18N, so they are
+    // rebuilt rather than retranslated in place. Only the labels change: the tag
+    // buttons keep their English values, so the filter in passes() goes on
+    // comparing against what Steam actually sent.
     chips();
+    statusList();
+    modeChips();
+    tagChips();
+    $("railmeta").textContent = t("railmeta", {n: nfmt(N.count), steam: nfmt(N.rated)});
     each(".lang button", function(o){
       o.setAttribute("aria-pressed", o.getAttribute("data-lang") === LANG ? "true" : "false");
     });
@@ -763,19 +769,48 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
       : "");
   }
 
-  // An option already added would filter to nothing on a second pick, so it
-  // leaves the list until its chip is removed.
-  function offer(tag, on){
-    each("#tags option", function(o){
-      if (o.value === tag) { o.hidden = !on; o.disabled = !on; }
-    });
+  // The status rows and the mode chips are single-choice and multi-choice
+  // respectively, so they are held as state rather than read back off the DOM.
+  var STATUS = "";
+  var MODES = {solo: false, coop: false, pad: false};
+
+  // Both lists name their strings at the call, not through a key held in a
+  // variable: the label has to be readable as a t("...") call to be seen as used.
+  function statusList(){
+    var rows = [["", t("st_any")], ["listed", t("st_listed")],
+                ["delisted", t("st_delisted")], ["not-on-steam", t("st_not")],
+                ["duplicate", t("st_dup")], ["unreleased", t("st_unreleased")],
+                ["unknown", t("st_unknown")]];
+    $("statuslist").innerHTML = rows.map(function(r){
+      return '<button type="button" data-st="' + esc(r[0]) + '" aria-pressed="' +
+             (STATUS === r[0] ? "true" : "false") + '"><span class="dot"></span>' +
+             '<span>' + esc(r[1]) + '</span>' +
+             '<span class="n">' + esc(nfmt(STATUS_N[r[0]] || 0)) + '</span></button>';
+    }).join("");
+  }
+
+  function modeChips(){
+    var rows = [["solo", t("mode_solo")], ["coop", t("mode_coop")], ["pad", t("chk_pad")]];
+    $("modechips").innerHTML = rows.map(function(r){
+      return '<button type="button" data-mode="' + r[0] + '" aria-pressed="' +
+             (MODES[r[0]] ? "true" : "false") + '">' + esc(r[1]) + '</button>';
+    }).join("");
+  }
+
+  // Offered tags are the ones not already picked; picking one moves it to a chip.
+  function tagChips(){
+    $("tagchips").innerHTML = TAGS.map(function(tag){
+      if (ACTIVE.indexOf(tag) !== -1) return "";
+      return '<button type="button" data-tag="' + esc(tag) + '" aria-pressed="false">' +
+             esc(tagName(tag)) + '</button>';
+    }).join("");
   }
 
   function drop(tag){
     var i = ACTIVE.indexOf(tag);
     if (i === -1) return;
     ACTIVE.splice(i, 1);
-    offer(tag, true);
+    tagChips();
     chips();
     render();
   }
@@ -787,16 +822,16 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
     for (var i = 0; i < ACTIVE.length; i++) {
       if (mine.indexOf(ACTIVE[i]) === -1) return false;
     }
-    var st = $("status").value;
+    var st = STATUS;
     if (st && (g.steam_status || "unknown") !== st) return false;
     // The review floor is a browsing floor, and it would hide every row that has
     // no reviews to count - exactly the rows someone picking "never on Steam" or
     // "duplicate entry" asked to see. Asking for a status by name lifts it for
     // those rows only; rows that do have reviews are still filtered normally.
     if ((g.reviews || 0) < STEPS[+$("minr").value] && !(st && !g.reviews)) return false;
-    if ($("sp").checked && !g.singleplayer) return false;
-    if ($("co").checked && !g.coop) return false;
-    if ($("pad").checked && !g.controller) return false;
+    if (MODES.solo && !g.singleplayer) return false;
+    if (MODES.coop && !g.coop) return false;
+    if (MODES.pad && !g.controller) return false;
     return true;
   }
 
@@ -884,13 +919,6 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
       var ar = th.querySelector(".ar");
       if (ar) ar.textContent = dir === 1 ? "▲" : "▼";
     }
-    // Keep the dropdown showing the live state; blank when the table is sorted
-    // by a column the dropdown has no entry for.
-    var sel = $("sort"), want = k + "|" + dir, known = false;
-    for (var i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].value === want) { known = true; break; }
-    }
-    sel.value = known ? want : "";
     render();
   }
 
@@ -909,20 +937,26 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
     });
   });
 
-  $("sort").addEventListener("change", function(){
-    var p = this.value.split("|");
-    if (p.length === 2) applySort(p[0], +p[1]);
+  $("q").addEventListener("input", render);
+  $("statuslist").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-st]") : null;
+    if (!b) return;
+    STATUS = b.dataset.st;
+    statusList();
+    render();
   });
-
-  ["q", "status", "sp", "co", "pad"].forEach(function(id){
-    $(id).addEventListener("input", render);
+  $("modechips").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-mode]") : null;
+    if (!b) return;
+    MODES[b.dataset.mode] = !MODES[b.dataset.mode];
+    modeChips();
+    render();
   });
-  $("tags").addEventListener("change", function(){
-    var tag = this.value;
-    this.value = "";                     // back to the prompt, ready for the next one
-    if (!tag || ACTIVE.indexOf(tag) !== -1) return;
-    ACTIVE.push(tag);
-    offer(tag, false);
+  $("tagchips").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button[data-tag]") : null;
+    if (!b || ACTIVE.indexOf(b.dataset.tag) !== -1) return;
+    ACTIVE.push(b.dataset.tag);
+    tagChips();
     chips();
     render();
   });
@@ -930,7 +964,8 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
     var b = e.target.closest ? e.target.closest("button") : null;
     if (!b) return;
     if (b.dataset.clear) {
-      ACTIVE.splice(0).forEach(function(tag){ offer(tag, true); });
+      ACTIVE.splice(0);
+      tagChips();
       chips();
       render();
     } else if (b.dataset.tag) {
@@ -942,12 +977,16 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
     render();
   });
   $("reset").addEventListener("click", function(){
-    $("q").value = ""; $("tags").value = ""; $("status").value = "";
-    ACTIVE.splice(0).forEach(function(tag){ offer(tag, true); });
-    chips();
+    $("q").value = "";
+    ACTIVE.splice(0);
+    STATUS = "";
+    MODES = {solo: false, coop: false, pad: false};
     $("minr").value = 1;
     $("minrv").textContent = nfmt(STEPS[1]);
-    $("sp").checked = $("co").checked = $("pad").checked = false;
+    chips();
+    statusList();
+    modeChips();
+    tagChips();
     render();
   });
   each(".lang button", function(b){
@@ -973,12 +1012,6 @@ def _median(xs):
 def _json(obj):
     """JSON that is safe to sit inside a <script> block."""
     return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
-
-
-def _esc(s):
-    """Steam tags carry ampersands - "Animation & Modeling" - so they need escaping."""
-    return (s.replace("&", "&amp;").replace("<", "&lt;")
-             .replace(">", "&gt;").replace('"', "&quot;"))
 
 
 def build():
@@ -1014,10 +1047,16 @@ def build():
     }
 
     tags = sorted({x for g in games for x in (g.get("tags") or [])})
-    opts = "".join('<option value="%s">%s</option>' % (_esc(t), _esc(t)) for t in tags)
+
+    # The status rows carry a count of the whole library, not of the current view,
+    # so they are counted here rather than off the filtered rows in the browser.
+    status_n = {s: verdicts[s] for s in
+                ("listed", "delisted", "not-on-steam", "duplicate", "unreleased", "unknown")}
+    status_n[""] = len(games)
 
     html = (TEMPLATE
-            .replace("__TAGS__", opts)
+            .replace("__TAGS__", _json(tags))
+            .replace("__STATUS_N__", _json(status_n))
             .replace("__HOURS_TH__", HOURS_TH if hours else "")
             .replace("__I18N__", _json(I18N))
             .replace("__TAG_MAP__", _json(TAG_ES))
