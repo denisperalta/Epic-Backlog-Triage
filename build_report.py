@@ -388,6 +388,8 @@ input[type=range]{accent-color:var(--accent);width:100%;margin:0}
 .chiprail button:hover{border-color:var(--accent)}
 .chiprail button[aria-pressed="true"]{background:var(--accent-soft);
   color:var(--accent-ink);border-color:var(--accent)}
+.chiprail button .n{margin-left:5px;font:400 11px/1 var(--mono);color:var(--faint);
+  font-variant-numeric:tabular-nums}
 .statuslist{display:flex;flex-direction:column;gap:5px}
 .statuslist button{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;
   border:0;border-radius:var(--radius-sm);cursor:pointer;text-align:left;
@@ -512,7 +514,7 @@ tbody tr:hover{background:var(--surface-2)}
     </div>
 
     <div>
-      <h2 id="h-minr" data-i18n="f_minr">Min reviews</h2>
+      <h2 data-i18n="f_minr">Min reviews</h2>
       <input type="range" id="minr" min="0" max="5" step="1" value="1"
              data-i18n-al="al_minr" aria-label="Minimum review count">
       <b id="minrv">100</b>
@@ -799,10 +801,10 @@ __HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Y
 
   // Offered tags are the ones not already picked; picking one moves it to a chip.
   function tagChips(){
-    $("tagchips").innerHTML = TAGS.map(function(tag){
-      if (ACTIVE.indexOf(tag) !== -1) return "";
-      return '<button type="button" data-tag="' + esc(tag) + '" aria-pressed="false">' +
-             esc(tagName(tag)) + '</button>';
+    $("tagchips").innerHTML = TAGS.map(function(r){
+      if (ACTIVE.indexOf(r[0]) !== -1) return "";
+      return '<button type="button" data-tag="' + esc(r[0]) + '" aria-pressed="false">' +
+             esc(tagName(r[0])) + '<span class="n">' + esc(nfmt(r[1])) + '</span></button>';
     }).join("");
   }
 
@@ -1046,7 +1048,10 @@ def build():
         "stamp": datetime.date.today().isoformat(),
     }
 
-    tags = sorted({x for g in games for x in (g.get("tags") or [])})
+    # The rail shows the tags worth browsing at a glance; the search box,
+    # which already matches tag names, reaches the other two hundred.
+    tag_n = Counter(x for g in games for x in (g.get("tags") or []))
+    top_tags = [[name, n] for name, n in tag_n.most_common(15)]
 
     # The status rows carry a count of the whole library, not of the current view,
     # so they are counted here rather than off the filtered rows in the browser.
@@ -1055,7 +1060,7 @@ def build():
     status_n[""] = len(games)
 
     html = (TEMPLATE
-            .replace("__TAGS__", _json(tags))
+            .replace("__TAGS__", _json(top_tags))
             .replace("__STATUS_N__", _json(status_n))
             .replace("__HOURS_TH__", HOURS_TH if hours else "")
             .replace("__I18N__", _json(I18N))
@@ -1068,7 +1073,7 @@ def build():
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(html)
     print("wrote %s  (%.0f KB, %d games, %d rated, %d tags)"
-          % (path, len(html) / 1024.0, len(games), len(rated), len(tags)))
+          % (path, len(html) / 1024.0, len(games), len(rated), len(tag_n)))
     # The headline answer, for anyone who runs this from run.bat and reads the
     # console rather than opening the page.
     print("      %d delisted on Steam, %d never on Steam, %d duplicate entries, "

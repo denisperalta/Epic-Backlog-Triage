@@ -151,10 +151,18 @@ class TestBuild(unittest.TestCase):
             self.assertIn(I18N["es"][key], html)
 
     def test_the_tag_list_reaches_the_page_as_json(self):
-        """The chip rail reads an array: option markup there would throw on load."""
+        """The chip rail reads an array of [name, count] pairs, ranked by frequency."""
         html = self.build()
         self.assertEqual(json.loads(re.search(r"var TAGS = (\[.*?\]);", html).group(1)),
-                         ["Action"])
+                         [["Action", 1]])
+
+    def test_the_tag_rail_is_capped_and_ranked(self):
+        """214 chips would bury every other filter in the rail."""
+        html = self.build()
+        tags = json.loads(re.search(r"var TAGS = (\[.*?\]);", html).group(1))
+        self.assertLessEqual(len(tags), 15)
+        counts = [n for _, n in tags]
+        self.assertEqual(counts, sorted(counts, reverse=True), "tags are not frequency-ranked")
 
     def test_the_status_counts_reach_the_page_as_numbers(self):
         html = self.build()
