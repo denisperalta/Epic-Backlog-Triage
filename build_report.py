@@ -283,11 +283,11 @@ TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
   --accent:var(--color-accent);
   --accent-soft:color-mix(in srgb,var(--color-accent) 14%,transparent);
   --accent-ink:var(--color-accent-400);
-  --track:var(--color-neutral-800); --chip-ink:var(--color-accent-100);
+  --chip-ink:var(--color-accent-100);
   --b1:#6aba77; --b2:#8ab45d; --b3:#b7a63d; --b4:#e08e53; --b5:#e8847c;
   --shadow:var(--shadow-md);
 }
-/* The light theme inverts onto the accent ramps - no new colours. */
+/* The light theme inverts onto the accent ramps - band colours are derived separately. */
 :root[data-theme="light"]{
   --bg:var(--color-accent-200); --surface:var(--color-accent-100);
   --surface-2:color-mix(in srgb,var(--color-accent-200) 78%,var(--color-accent-300));
@@ -298,7 +298,6 @@ TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
   --accent:var(--color-accent-600);
   --accent-soft:color-mix(in srgb,var(--color-accent-600) 12%,transparent);
   --accent-ink:var(--color-accent-700);
-  --track:color-mix(in srgb,var(--color-neutral-900) 10%,transparent);
   --chip-ink:var(--color-accent-100);
   --b1:#397945; --b2:#54752f; --b3:#776a0a; --b4:#965726; --b5:#9c4e49;
   --shadow:0 1px 2px color-mix(in srgb,var(--color-neutral-900) 6%,transparent),
@@ -315,7 +314,6 @@ TEMPLATE = r"""<title data-i18n="title">Epic Backlog Triage</title>
     --accent:var(--color-accent-600);
     --accent-soft:color-mix(in srgb,var(--color-accent-600) 12%,transparent);
     --accent-ink:var(--color-accent-700);
-    --track:color-mix(in srgb,var(--color-neutral-900) 10%,transparent);
     --chip-ink:var(--color-accent-100);
     --b1:#397945; --b2:#54752f; --b3:#776a0a; --b4:#965726; --b5:#9c4e49;
     --shadow:0 1px 2px color-mix(in srgb,var(--color-neutral-900) 6%,transparent),
