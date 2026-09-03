@@ -191,5 +191,15 @@ class TestTheme(unittest.TestCase):
         self.assertIn("--mono:ui-monospace", TEMPLATE)
 
 
+class TestThemeToggle(unittest.TestCase):
+    def test_the_toggle_ships(self):
+        self.assertIn('id="theme"', TEMPLATE)
+        self.assertIn('data-i18n-al="al_theme"', TEMPLATE)
+
+    def test_the_toggle_writes_the_attribute_and_remembers(self):
+        self.assertIn('setAttribute("data-theme"', TEMPLATE)
+        self.assertIn('localStorage.setItem("eb.theme"', TEMPLATE)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -17,6 +17,9 @@ EN = {
     "al_lang": "Language",
     "lang_en": "EN",
     "lang_es": "ES",
+    "light": "LIGHT",
+    "dark": "DARK",
+    "al_theme": "Switch between the light and dark theme",
 
     "tile_total_k": "Games in library",
     "tile_total_n": "{rated} found on Steam",
@@ -112,6 +115,9 @@ ES = {
     "al_lang": "Idioma",
     "lang_en": "EN",
     "lang_es": "ES",
+    "light": "CLARO",
+    "dark": "OSCURO",
+    "al_theme": "Cambiar entre el tema claro y el oscuro",
 
     "tile_total_k": "Juegos en la biblioteca",
     "tile_total_n": "{rated} encontrados en Steam",
@@ -447,6 +453,14 @@ tbody tr:hover{background:var(--surface-2)}
 .empty{padding:52px 20px;text-align:center;color:var(--muted)}
 .foot{display:block;margin-top:18px;font-size:12.5px;color:var(--faint);line-height:1.65;max-width:96ch}
 .foot code{font-family:var(--mono);font-size:11.5px}
+/* ---------- theme toggle ---------- */
+.theme{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;
+  font:600 10.5px/1 var(--mono);letter-spacing:.1em;padding:8px 12px;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--radius-md);background:transparent;
+  color:var(--muted)}
+.theme:hover{color:var(--accent);border-color:var(--accent)}
+.theme .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor}
+:root[data-theme="light"] .theme .dot{background:currentColor}
 /* ---------- language switcher ---------- */
 .lang{display:inline-flex;gap:2px;margin-left:auto;align-self:flex-start;padding:2px;
   background:var(--surface);border:1px solid var(--line);border-radius:8px;
@@ -468,6 +482,7 @@ tbody tr:hover{background:var(--surface-2)}
       <p class="sub" data-i18n-html="sub">Games in the Epic library, pulled with <code>legendary</code>
       and scored against live Steam review data.</p>
     </div>
+    <button type="button" id="theme" class="theme" data-i18n-al="al_theme"></button>
     <div class="lang" role="group" data-i18n-al="al_lang" aria-label="Language">
       <button type="button" data-lang="es" data-i18n="lang_es">ES</button>
       <button type="button" data-lang="en" data-i18n="lang_en">EN</button>
@@ -555,6 +570,33 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   function esc(s){
     return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return ENT[c]; });
   }
+
+  /* ---------- theme ---------- */
+
+  // Dark is the default. An explicit choice is remembered and wins over the
+  // system preference; with nothing saved the media query decides.
+  var THEME = "dark";
+
+  function savedTheme(){
+    try {
+      var s = localStorage.getItem("eb.theme");
+      if (s === "dark" || s === "light") return s;
+    } catch (e) {}
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+      ? "light" : "dark";
+  }
+
+  function applyTheme(mode){
+    THEME = mode === "light" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", THEME);
+    try { localStorage.setItem("eb.theme", THEME); } catch (e) {}
+    $("theme").innerHTML = '<span class="dot"></span>' +
+      esc(THEME === "dark" ? t("dark") : t("light"));
+  }
+
+  $("theme").addEventListener("click", function(){
+    applyTheme(THEME === "dark" ? "light" : "dark");
+  });
 
   /* ---------- language ---------- */
 
@@ -679,6 +721,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
     $("foot").innerHTML = t("foot");
     render();
     syncBar();
+    applyTheme(THEME);
   }
 
   var sortKey = "sort_score", sortDir = -1;
@@ -905,6 +948,7 @@ __HOURS_TH__        <th data-k="year" data-num="1"><span data-i18n="th_year">Yea
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncBar);
   syncBar();
 
+  applyTheme(savedTheme());
   applyLang(preferred());
   applySort("sort_score", -1);
 })();
