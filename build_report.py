@@ -352,11 +352,10 @@ body{margin:0;background:var(--bg);color:var(--ink);
 /* Groups the theme toggle with the language switcher so both sit right-aligned
    as one unit, instead of the toggle sitting flush against the title block. */
 .mast .tools{display:flex;align-items:center;gap:10px;margin-left:auto;align-self:flex-start}
-h1{font-family:var(--font-heading);
-  font-weight:500;font-size:clamp(29px,4.4vw,44px);line-height:1.02;letter-spacing:-.022em;
+h1{font:500 30px/1.1 var(--font-heading);letter-spacing:-.03em;
   margin:0;text-wrap:balance}
 h1 em{font-style:normal;color:var(--accent)}
-.sub{color:var(--muted);font-size:14px;max-width:64ch;margin:9px 0 0}
+.sub{color:var(--muted);font-size:12.5px;max-width:64ch;margin:9px 0 0}
 .sub code{font-family:var(--mono);font-size:12.5px;
   background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
 .sub b{color:var(--ink);font-weight:600}
@@ -425,30 +424,31 @@ button.reset:hover{color:var(--ink);border-color:var(--muted)}
 /* No overflow container at desktop widths: an overflow box would become the
    containing scrollport for the sticky header, pinning it inside the table
    instead of below the filter bar. Narrow screens trade sticky for scroll. */
-.scroll{background:var(--surface);border-top:1px solid var(--line);margin-top:6px}
+.scroll{background:none;border-top:0;margin-top:18px}
 table{border-collapse:collapse;width:100%;min-width:1020px}
-thead th{position:sticky;top:0;z-index:10;background:var(--surface-2);
-  font-size:10.5px;letter-spacing:.085em;text-transform:uppercase;color:var(--faint);
-  font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);
-  cursor:pointer;white-space:nowrap;user-select:none}
+thead th{position:sticky;top:0;z-index:10;background:var(--bg);
+  font:600 9px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);text-align:left;padding:0 12px 9px;
+  border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
 thead th:hover{color:var(--ink)}
 thead th[aria-sort]{color:var(--accent)}
 thead th .ar{opacity:.55;font-size:9px;margin-left:3px}
-tbody td{padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
 tbody tr:last-child td{border-bottom:0}
-tbody tr:hover{background:var(--surface-2)}
+tbody tr:hover{background:var(--accent-soft);box-shadow:inset 2px 0 0 var(--accent)}
 .num{font-family:var(--mono);font-variant-numeric:tabular-nums;
   font-size:13px;text-align:right;white-space:nowrap}
 .rank{color:var(--faint);font-size:12px;width:46px}
 .name{min-width:236px;max-width:340px}
-.name a{color:var(--ink);text-decoration:none;font-weight:500;line-height:1.3;
-  display:block;text-underline-offset:2px}
+.name a{color:var(--ink);text-decoration:none;display:block;text-underline-offset:2px;
+  font:500 13.5px/1.25 var(--font-body);letter-spacing:-.01em}
 .name a[href]:hover{text-decoration:underline;color:var(--accent-ink)}
 .name .dev{color:var(--faint);font-size:11.5px;margin-top:2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .taglist{display:flex;flex-wrap:wrap;gap:4px;min-width:150px;max-width:220px}
-.taglist span{font-size:11px;color:var(--muted);background:var(--surface-2);
-  border:1px solid var(--line);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.taglist span{font-size:11px;color:var(--muted);background:none;
+  border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:1px 7px;
+  white-space:nowrap}
 
 /* review bar: proportion positive, coloured by Steam's own tier */
 .rate{min-width:152px}
@@ -456,8 +456,9 @@ tbody tr:hover{background:var(--surface-2)}
 .rate .pct{font-family:var(--mono);font-size:13px;font-weight:600;
   font-variant-numeric:tabular-nums}
 .rate .desc{font-size:10.5px;color:var(--faint);text-align:right;line-height:1.2}
-.rate .track{height:4px;background:var(--track);border-radius:3px;margin-top:5px;overflow:hidden}
-.rate .fill{height:100%;border-radius:3px}
+.rate .track{height:3px;background:var(--line-soft);border-radius:2px;margin-top:5px;
+  overflow:hidden}
+.rate .fill{height:100%;border-radius:2px}
 .t1{color:var(--b1)} .t2{color:var(--b2)} .t3{color:var(--b3)}
 .t4{color:var(--b4)} .t5{color:var(--b5)}
 .f1{background:var(--b1)} .f2{background:var(--b2)} .f3{background:var(--b3)}
@@ -465,10 +466,10 @@ tbody tr:hover{background:var(--surface-2)}
 .mode{font-size:11px;color:var(--muted);white-space:nowrap;letter-spacing:.02em}
 .dash{color:var(--faint)}
 .tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;
-  text-transform:uppercase;border-radius:4px;padding:1px 5px;margin-left:6px;
+  text-transform:uppercase;border-radius:var(--radius-sm);padding:1px 5px;margin-left:6px;
   vertical-align:2px;white-space:nowrap;border:1px solid var(--line);
   background:var(--surface-2);color:var(--muted)}
-.tag.gone{color:var(--b4);border-color:var(--b4);background:transparent}
+.tag.gone{color:var(--accent-ink);border-color:var(--accent);background:transparent}
 .empty{padding:52px 20px;text-align:center;color:var(--muted)}
 .foot{display:block;margin-top:18px;font-size:12.5px;color:var(--faint);line-height:1.65;max-width:96ch}
 .foot code{font-family:var(--mono);font-size:11.5px}
@@ -489,7 +490,7 @@ tbody tr:hover{background:var(--surface-2)}
 .lang button:hover{color:var(--ink)}
 .lang button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
 
-@media (max-width:1080px){ .scroll{overflow-x:auto} thead th{top:0} }
+@media (max-width:1080px){ .scroll{overflow-x:auto} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 
