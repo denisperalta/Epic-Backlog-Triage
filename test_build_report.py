@@ -288,11 +288,14 @@ class TestDrawer(unittest.TestCase):
         self.assertIn('e.key === "Tab"', TEMPLATE)
 
     def test_every_keyframe_is_covered_by_the_reduced_motion_guard(self):
+        """A bare `*` selector does not reach ::before/::after, so the guard has to
+        name them too; and the keyframes are named explicitly so a new one added
+        outside this file's three would fail loudly instead of passing by accident."""
         self.assertIn(
-            "@media (prefers-reduced-motion:reduce){*{animation:none!important;"
-            "transition:none!important}}", TEMPLATE)
-        self.assertTrue(re.findall(r"@keyframes (\w+)", TEMPLATE),
-                         "no keyframes found to guard")
+            "@media (prefers-reduced-motion:reduce){*,*::before,*::after{"
+            "animation:none!important;transition:none!important}}", TEMPLATE)
+        self.assertEqual(sorted(re.findall(r"@keyframes (\w+)", TEMPLATE)),
+                          ["barGrow", "drawerIn", "drawerVeil"])
 
 
 if __name__ == "__main__":

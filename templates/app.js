@@ -321,7 +321,7 @@
         ? '<span class="dash">' + why + '</span>'
         : '<div class="top"><span class="pct t' + b + '">' + pct(g.rating, 2) + '</span>' +
           '<span class="desc">' + esc(reviewName(g.review_desc)) + '</span></div>' +
-          '<div class="track"><div class="fill f' + b + '" style="width:' + g.rating + '%"></div></div>';
+          '<div class="track"><div class="fill f' + b + '" style="width:' + esc(g.rating) + '%"></div></div>';
       var name = '<span class="t">' + esc(g.title) + '</span>';
       var tag = tagFor(g.steam_status);
       if (tag) {
@@ -343,6 +343,7 @@
             return '<span>' + esc(tagName(x)) + '</span>'; }).join('') + '</div></td>' +
         (N.hasHours ? '<td class="num">' +
           (g.hltb_main ? hrs(g.hltb_main) : '<span class="dash">&mdash;</span>') + '</td>' : '') +
+        // A year is a label, not a quantity: it must not pick up a thousands separator.
         '<td class="num">' + (g.year || '<span class="dash">&mdash;</span>') + '</td>' +
         '<td class="mode">' + esc(g.mode) + '</td>' +
       '</tr>';
@@ -398,7 +399,7 @@
       rateHtml =
         '<div class="d-top"><span class="d-pct t' + b + '">' + pct(g.rating, 2) + '</span>' +
         '<span class="d-desc">' + esc(reviewName(g.review_desc)) + '</span></div>' +
-        '<div class="d-track"><div class="d-fill f' + b + '" style="width:' + g.rating + '%"></div></div>' +
+        '<div class="d-track"><div class="d-fill f' + b + '" style="width:' + esc(g.rating) + '%"></div></div>' +
         '<div class="d-posneg" role="group" aria-label="' +
           esc(nfmt(g.reviews) + " " + t("reviews_n")) + '">' +
         '<span>' + esc(nfmt(g.positive) + " " + t("pos")) + '</span>' +
@@ -418,10 +419,15 @@
     var tagsHtml = (g.tags || []).map(function(x){
       return '<span>' + esc(tagName(x)) + '</span>';
     }).join("");
-    var prov = g.steam_source === "pcgw" ? t("prov_pcgw")
+    // A duplicate entry did have a page found for it - it's just shared with another
+    // entry, which the badge and why already say. Explaining how the match was made
+    // would contradict that in the same panel ("no page was found" next to "same page
+    // as X"), so duplicates get no provenance sentence at all.
+    var prov = g.steam_status === "duplicate" ? ""
+      : g.steam_source === "pcgw" ? t("prov_pcgw")
       : g.steam_url ? t("prov_search") : t("prov_none");
     var linkHtml = g.steam_url
-      ? '<a class="d-open" href="' + g.steam_url + '" target="_blank" rel="noopener">' +
+      ? '<a class="d-open" href="' + esc(g.steam_url) + '" target="_blank" rel="noopener">' +
         esc(t("d_open")) + '</a>'
       : "";
 
@@ -439,20 +445,37 @@
         esc(tag) + '</div>' : "") +
       '<div class="d-body">' +
         '<div><div class="d-k">' + esc(t("d_conf")) + '</div>' + confHtml +
-          '<p class="d-wilson">' + esc(t("d_wilson")) + '</p></div>' +
+          (g.sort_score != null
+            ? '<p class="d-wilson">' + esc(t("d_wilson")) + '</p>' : "") + '</div>' +
         '<div><div class="d-k">' + esc(t("d_rating")) + '</div>' + rateHtml + '</div>' +
         '<div class="d-facts">' + factsHtml + '</div>' +
-        '<div><div class="d-k">' + esc(t("d_tags")) + '</div>' +
-          '<div class="d-tags">' + tagsHtml + '</div></div>' +
-        '<p class="d-prov">' + esc(prov) + '</p>' +
+        (tagsHtml ? '<div><div class="d-k">' + esc(t("d_tags")) + '</div>' +
+          '<div class="d-tags">' + tagsHtml + '</div></div>' : "") +
+        (prov ? '<p class="d-prov">' + esc(prov) + '</p>' : "") +
         (linkHtml ? '<div class="d-actions">' + linkHtml + '</div>' : "") +
       '</div>';
   }
 
+  // Held as the triggering row's title, not the element itself: a render() while
+  // the drawer was open (nothing behind the veil is clickable today, but this keeps
+  // the guarantee even so) would leave a raw element reference detached from the
+  // document, and .focus() on a detached node silently does nothing.
+  function rowFor(title){
+    var rows = body.querySelectorAll("tr[data-row]");
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].getAttribute("data-row") === title) return rows[i];
+    }
+    return null;
+  }
+
   function openDrawer(title){
-    LAST_FOCUS = document.activeElement;
+    // The only callers are the row click/keydown handlers below, both passing the
+    // triggering row's own data-row - so that row is always the current
+    // document.activeElement, and its title is all closeDrawer needs to find it again.
+    LAST_FOCUS = title;
     SEL = title;
     renderDrawer();
+    if (!SEL) return;
     $("veil").hidden = false;
     $("drawer").hidden = false;
     var closeBtn = $("dr-close");
@@ -463,7 +486,9 @@
     SEL = null;
     $("veil").hidden = true;
     $("drawer").hidden = true;
-    if (LAST_FOCUS && LAST_FOCUS.focus) LAST_FOCUS.focus();
+    var row = LAST_FOCUS ? rowFor(LAST_FOCUS) : null;
+    if (row) row.focus();
+    LAST_FOCUS = null;
   }
 
   function applySort(k, dir){
