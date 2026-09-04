@@ -1,5 +1,5 @@
 """Tests for the report's two-language text: the pairs that silently drift apart."""
-import contextlib, hashlib, io, json, os, re, tempfile, unittest
+import contextlib, io, json, os, re, tempfile, unittest
 
 import build_report
 from build_report import HOURS_TH, I18N, TEMPLATE
@@ -237,29 +237,36 @@ class TestLayout(unittest.TestCase):
             self.assertNotIn(dead, TEMPLATE)
 
 
-class TestTemplateSplit(unittest.TestCase):
-    """Splitting TEMPLATE into files must not change a single byte of output."""
+class TestDrawer(unittest.TestCase):
+    """The row is a keyed, keyboard-operable click target that opens a detail drawer."""
 
-    # sha256 of out/report.html built from the TestBuild fixture, captured from the
-    # pre-split TEMPLATE. If this stops matching, the split changed something.
-    GOLDEN_SHA256 = "0858411f51357b3a33ce91afc4050338b4bbf52292e02842e383d64da063da7b"
+    def test_every_row_carries_a_key_and_is_focusable(self):
+        self.assertIn('data-row="', TEMPLATE)
+        self.assertIn('tabindex="0"', TEMPLATE)
 
-    def test_the_split_build_is_byte_identical_to_before(self):
-        tmp = tempfile.mkdtemp()
-        self.addCleanup(setattr, build_report, "OUT", build_report.OUT)
-        build_report.OUT = tmp
-        with open(os.path.join(tmp, "games.json"), "w", encoding="utf-8") as fh:
-            json.dump([{"title": "A Game", "steam_status": "listed", "rating": 92.5,
-                        "reviews": 1200, "sort_score": 90.8, "review_desc": "Very Positive",
-                        "tags": ["Action"], "release_date": "2020-01-01",
-                        "developer": "Someone", "singleplayer": True},
-                       {"title": "Gone Game", "steam_status": "delisted", "rating": None,
-                        "reviews": 0, "tags": []}], fh)
-        with contextlib.redirect_stdout(io.StringIO()):
-            build_report.build()
-        with open(os.path.join(tmp, "report.html"), encoding="utf-8") as fh:
-            html = fh.read()
-        self.assertEqual(hashlib.sha256(html.encode("utf-8")).hexdigest(), self.GOLDEN_SHA256)
+    def test_the_title_is_no_longer_a_link(self):
+        self.assertNotIn('<a href="\' + g.steam_url', TEMPLATE)
+
+    def test_the_drawer_shell_ships_with_dialog_roles(self):
+        self.assertIn('id="veil" hidden', TEMPLATE)
+        self.assertIn('role="dialog"', TEMPLATE)
+        self.assertIn('aria-modal="true"', TEMPLATE)
+        self.assertIn('aria-labelledby="dr-title"', TEMPLATE)
+
+    def test_row_activation_opens_the_drawer(self):
+        self.assertIn("function openDrawer(", TEMPLATE)
+        self.assertIn('closest("tr[data-row]")', TEMPLATE)
+
+    def test_the_drawer_traps_focus_and_closes_on_escape(self):
+        self.assertIn('e.key === "Escape"', TEMPLATE)
+        self.assertIn('e.key === "Tab"', TEMPLATE)
+
+    def test_every_keyframe_is_covered_by_the_reduced_motion_guard(self):
+        self.assertIn(
+            "@media (prefers-reduced-motion:reduce){*{animation:none!important;"
+            "transition:none!important}}", TEMPLATE)
+        self.assertTrue(re.findall(r"@keyframes (\w+)", TEMPLATE),
+                         "no keyframes found to guard")
 
 
 if __name__ == "__main__":

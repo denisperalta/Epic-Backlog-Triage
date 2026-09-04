@@ -80,6 +80,26 @@ EN = {
     "mode_coop": "Co-op",
     "mode_mp": "MP",
 
+    "d_conf": "Confidence score",
+    "d_rating": "Steam rating",
+    "d_tags": "Tags",
+    "d_wilson": "The Wilson 95% lower bound on the share of positive reviews. It starts "
+                "at the raw rating and pulls downward the fewer reviews there are.",
+    "d_open": "Open Steam page",
+    "al_close": "Close",
+    "d_delta": "{delta} below the raw {raw}",
+    "f_dev": "Developer",
+    "f_pub": "Publisher",
+    "f_rel": "Released",
+    "pos": "positive",
+    "neg": "negative",
+    "reviews_n": "reviews",
+    "prov_search": "Matched through Steam's own storefront search.",
+    "prov_pcgw": "Steam's search cannot return this title, so it was identified through "
+                 "PCGamingWiki — a weaker source that can pick the wrong release "
+                 "where a name is reused.",
+    "prov_none": "Neither Steam's search nor PCGamingWiki returned a page for this title.",
+
     "foot_hours": "Playtime is HowLongToBeat&rsquo;s main-story figure. ",
     "foot_nohours": "Playtime is not shown: HowLongToBeat now requires a browser session "
                     "fingerprint and refuses direct requests. ",
@@ -171,6 +191,28 @@ ES = {
     "mode_solo": "Un jugador",
     "mode_coop": "Cooperativo",
     "mode_mp": "Multi",
+
+    "d_conf": "Puntuaci\u00f3n de confianza",
+    "d_rating": "Valoraci\u00f3n en Steam",
+    "d_tags": "Etiquetas",
+    "d_wilson": "El l\u00edmite inferior de Wilson al 95 % sobre la proporci\u00f3n de "
+                "rese\u00f1as positivas: parte de la valoraci\u00f3n bruta y tira hacia "
+                "abajo cuantas menos rese\u00f1as hay.",
+    "d_open": "Abrir la ficha de Steam",
+    "al_close": "Cerrar",
+    "d_delta": "{delta} por debajo del {raw} bruto",
+    "f_dev": "Desarrollador",
+    "f_pub": "Distribuidora",
+    "f_rel": "Lanzamiento",
+    "pos": "positivas",
+    "neg": "negativas",
+    "reviews_n": "rese\u00f1as",
+    "prov_search": "Identificado mediante la propia b\u00fasqueda de la tienda de Steam.",
+    "prov_pcgw": "La b\u00fasqueda de Steam no devuelve este t\u00edtulo, as\u00ed que se "
+                 "identific\u00f3 mediante PCGamingWiki: una fuente m\u00e1s d\u00e9bil "
+                 "que puede elegir el lanzamiento equivocado cuando un nombre se reutiliza.",
+    "prov_none": "Ni la b\u00fasqueda de Steam ni PCGamingWiki devolvieron una ficha "
+                 "para este t\u00edtulo.",
 
     "foot_hours": "La duraci\u00f3n es la de la historia principal seg\u00fan HowLongToBeat. ",
     "foot_nohours": "La duraci\u00f3n no se muestra: HowLongToBeat ahora exige la huella de "

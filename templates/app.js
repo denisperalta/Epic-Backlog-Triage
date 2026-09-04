@@ -107,6 +107,15 @@
          : s === "unknown" ? t("tag_unknown") : "";
   }
 
+  function whyFor(g){
+    return g.steam_status === "delisted" ? t("why_delisted")
+      : g.steam_status === "duplicate"
+      ? t("why_dup", {name: esc(g.duplicate_of) || t("why_dup_any")})
+      : g.steam_status === "not-on-steam" ? t("why_not")
+      : g.steam_status === "unreleased" ? t("why_unreleased")
+      : t("why_unknown");
+  }
+
   GAMES.forEach(function(g){
     var d = (g.release_date || "").match(/(19|20)\d{2}/);
     g.year = d ? +d[0] : null;
@@ -168,6 +177,7 @@
     statusList();
     modeChips();
     tagChips();
+    if (SEL) renderDrawer();
     $("railmeta").textContent = t("railmeta", {n: nfmt(N.count), steam: nfmt(N.rated)});
     each(".lang button", function(o){
       o.setAttribute("aria-pressed", o.getAttribute("data-lang") === LANG ? "true" : "false");
@@ -184,6 +194,14 @@
   // The tags being filtered on, held as the English names Steam sent - the same
   // values the options carry, so the filter survives a language switch.
   var ACTIVE = [];
+
+  // The current filtered+sorted rows, in render order - the drawer looks a game up
+  // here to show its rank, and Task 3's FLIP animation diffs this against the
+  // previous render to find what moved.
+  var VISIBLE = [];
+
+  var SEL = null;
+  var LAST_FOCUS = null;
 
   function chips(){
     var box = $("chips");
@@ -289,31 +307,21 @@
 
     body.innerHTML = rows.map(function(g, i){
       var b = g.band;
-      var why = g.steam_status === "delisted" ? t("why_delisted")
-        : g.steam_status === "duplicate"
-        ? t("why_dup", {name: esc(g.duplicate_of) || t("why_dup_any")})
-        : g.steam_status === "not-on-steam" ? t("why_not")
-        : g.steam_status === "unreleased" ? t("why_unreleased")
-        : t("why_unknown");
+      var why = whyFor(g);
       var rate = g.rating == null
         ? '<span class="dash">' + why + '</span>'
         : '<div class="top"><span class="pct t' + b + '">' + pct(g.rating, 2) + '</span>' +
           '<span class="desc">' + esc(reviewName(g.review_desc)) + '</span></div>' +
           '<div class="track"><div class="fill f' + b + '" style="width:' + g.rating + '%"></div></div>';
-      var name = g.steam_url
-        ? '<a href="' + g.steam_url + '" target="_blank" rel="noopener">' + esc(g.title) + '</a>'
-        : '<a>' + esc(g.title) + '</a>';
+      var name = '<span class="t">' + esc(g.title) + '</span>';
       var tag = tagFor(g.steam_status);
       if (tag) {
-        // Say where a match came from: a title Steam's own search cannot return was
-        // identified through PCGamingWiki, which is a weaker source than a store hit
-        // and can pick the wrong game where a name is reused across releases.
         var tip = why + (g.steam_source === "pcgw"
           ? t("tip_pcgw", {name: esc(g.matched_name)}) : "");
         name += '<span class="tag' + (g.steam_status === "delisted" ? " gone" : "") +
                 '" title="' + tip + '">' + esc(tag) + '</span>';
       }
-      return '<tr>' +
+      return '<tr data-row="' + esc(g.title) + '" tabindex="0" role="button" aria-haspopup="dialog">' +
         '<td class="num rank">' + (i + 1) + '</td>' +
         '<td class="name">' + name +
           (g.developer ? '<div class="dev">' + esc(g.developer) + '</div>' : '') + '</td>' +
@@ -326,14 +334,107 @@
             return '<span>' + esc(tagName(x)) + '</span>'; }).join('') + '</div></td>' +
         (N.hasHours ? '<td class="num">' +
           (g.hltb_main ? hrs(g.hltb_main) : '<span class="dash">&mdash;</span>') + '</td>' : '') +
-        // A year is a label, not a quantity: it must not pick up a thousands separator.
         '<td class="num">' + (g.year || '<span class="dash">&mdash;</span>') + '</td>' +
         '<td class="mode">' + esc(g.mode) + '</td>' +
       '</tr>';
     }).join("");
+    VISIBLE = rows;
 
     $("count").innerHTML = t("count", {n: nfmt(rows.length)});
     $("none").hidden = rows.length > 0;
+  }
+
+  function pad2(n){ return (n < 10 ? "0" : "") + n; }
+
+  function renderDrawer(){
+    var g = null;
+    for (var i = 0; i < GAMES.length; i++) { if (GAMES[i].title === SEL) { g = GAMES[i]; break; } }
+    if (!g) { closeDrawer(); return; }
+    var rank = VISIBLE.indexOf(g) + 1;
+    var b = g.band;
+    var tag = tagFor(g.steam_status);
+    var why = whyFor(g);
+    var confHtml;
+    if (g.sort_score == null) {
+      confHtml = '<span class="dash">' + why + '</span>';
+    } else {
+      var delta = g.rating - g.sort_score;
+      confHtml = '<div class="d-conf"><b class="t' + b + '">' + dec(g.sort_score, 2) + '</b>' +
+        '<span class="d-delta">' + esc(t("d_delta", {delta: dec(delta, 2), raw: pct(g.rating, 2)})) +
+        '</span></div>';
+    }
+    var rateHtml;
+    if (g.rating == null) {
+      rateHtml = '<span class="dash">' + why + '</span>';
+    } else {
+      rateHtml =
+        '<div class="d-top"><span class="d-pct t' + b + '">' + pct(g.rating, 2) + '</span>' +
+        '<span class="d-desc">' + esc(reviewName(g.review_desc)) + '</span></div>' +
+        '<div class="d-track"><div class="d-fill f' + b + '" style="width:' + g.rating + '%"></div></div>' +
+        '<div class="d-posneg" aria-label="' + esc(nfmt(g.reviews) + " " + t("reviews_n")) + '">' +
+        '<span>' + esc(nfmt(g.positive) + " " + t("pos")) + '</span>' +
+        '<span>' + esc(nfmt(g.negative) + " " + t("neg")) + '</span></div>';
+    }
+    var facts = [
+      [t("f_dev"), g.developer || "—"],
+      [t("f_pub"), g.publisher || "—"],
+      [t("f_rel"), g.release_date ? ymd(g.release_date) : "—"],
+      [t("f_modes"), g.mode || "—"],
+      [t("f_status"), g.steam_status === "listed" ? t("st_listed") : tag]
+    ];
+    var factsHtml = facts.map(function(f){
+      return '<div class="d-fact"><div class="k">' + esc(f[0]) + '</div>' +
+             '<div class="v">' + esc(f[1]) + '</div></div>';
+    }).join("");
+    var tagsHtml = (g.tags || []).map(function(x){
+      return '<span>' + esc(tagName(x)) + '</span>';
+    }).join("");
+    var prov = g.steam_source === "pcgw" ? t("prov_pcgw")
+      : g.steam_url ? t("prov_search") : t("prov_none");
+    var linkHtml = g.steam_url
+      ? '<a class="d-open" href="' + g.steam_url + '" target="_blank" rel="noopener">' +
+        esc(t("d_open")) + '</a>'
+      : "";
+
+    $("drawer").innerHTML =
+      '<div class="d-head">' +
+        '<div class="d-headtext">' +
+          '<div class="d-rank">#' + pad2(rank) + '</div>' +
+          '<div id="dr-title" class="d-title">' + esc(g.title) + '</div>' +
+          (g.developer ? '<div class="d-dev">' + esc(g.developer) + '</div>' : "") +
+        '</div>' +
+        '<button type="button" id="dr-close" class="d-close" aria-label="' +
+          esc(t("al_close")) + '">✕</button>' +
+      '</div>' +
+      (tag ? '<div class="d-badge tag' + (g.steam_status === "delisted" ? " gone" : "") + '">' +
+        esc(tag) + '</div>' : "") +
+      '<div class="d-body">' +
+        '<div><div class="d-k">' + esc(t("d_conf")) + '</div>' + confHtml +
+          '<p class="d-wilson">' + esc(t("d_wilson")) + '</p></div>' +
+        '<div><div class="d-k">' + esc(t("d_rating")) + '</div>' + rateHtml + '</div>' +
+        '<div class="d-facts">' + factsHtml + '</div>' +
+        '<div><div class="d-k">' + esc(t("d_tags")) + '</div>' +
+          '<div class="d-tags">' + tagsHtml + '</div></div>' +
+        '<p class="d-prov">' + esc(prov) + '</p>' +
+        (linkHtml ? '<div class="d-actions">' + linkHtml + '</div>' : "") +
+      '</div>';
+  }
+
+  function openDrawer(title){
+    LAST_FOCUS = document.activeElement;
+    SEL = title;
+    renderDrawer();
+    $("veil").hidden = false;
+    $("drawer").hidden = false;
+    var closeBtn = $("dr-close");
+    if (closeBtn) closeBtn.focus();
+  }
+
+  function closeDrawer(){
+    SEL = null;
+    $("veil").hidden = true;
+    $("drawer").hidden = true;
+    if (LAST_FOCUS && LAST_FOCUS.focus) LAST_FOCUS.focus();
   }
 
   function applySort(k, dir){
@@ -421,6 +522,36 @@
   });
   each(".lang button", function(b){
     b.addEventListener("click", function(){ applyLang(b.getAttribute("data-lang")); });
+  });
+
+  body.addEventListener("click", function(e){
+    var tr = e.target.closest ? e.target.closest("tr[data-row]") : null;
+    if (tr) openDrawer(tr.getAttribute("data-row"));
+  });
+  body.addEventListener("keydown", function(e){
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var tr = e.target.closest ? e.target.closest("tr[data-row]") : null;
+    if (!tr) return;
+    e.preventDefault();
+    openDrawer(tr.getAttribute("data-row"));
+  });
+  $("veil").addEventListener("click", closeDrawer);
+  $("drawer").addEventListener("click", function(e){
+    if (e.target.closest && e.target.closest("#dr-close")) closeDrawer();
+  });
+  document.addEventListener("keydown", function(e){
+    if (!SEL) return;
+    if (e.key === "Escape") { closeDrawer(); return; }
+    if (e.key === "Tab") {
+      var focusable = $("drawer").querySelectorAll('a[href], button:not([disabled])');
+      if (!focusable.length) return;
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    }
   });
 
   applyTheme(savedTheme());
