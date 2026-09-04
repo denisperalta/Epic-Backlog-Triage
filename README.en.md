@@ -38,6 +38,21 @@ everyone else follows the three commands under [Setup by hand](#setup-by-hand).
 
 Windows, macOS and Linux all work. The Epic Games Launcher does **not** need to be installed.
 
+Before you run `run.bat` (or the scripts by hand), and during the first run, a few things only
+you can do:
+
+1. Have an Epic Games account — create one at [epicgames.com](https://www.epicgames.com) if you
+   don't have one.
+2. On Windows, have `winget` available: it ships with Windows 11 and an updated Windows 10; if
+   it's missing, install **App Installer** from the Microsoft Store. `run.bat` uses it to install
+   Python automatically when it can't find one, but winget only exists on Windows — on macOS and
+   Linux, install Python yourself (see [Setup by hand](#setup-by-hand)).
+3. Have an internet connection for the first run — later runs use the cache.
+4. If Python wasn't already installed, accept its installation when `run.bat` prompts for it —
+   winget needs your confirmation, and Windows may ask for administrator permission.
+5. When the browser tab opens, log in with your Epic Games credentials.
+6. Copy the authorization code that page hands back and paste it into the terminal when asked.
+
 ## Quick start (Windows)
 
 Download or clone the repo, then double-click `run.bat`. It:
