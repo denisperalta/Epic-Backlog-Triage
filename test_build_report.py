@@ -244,6 +244,21 @@ class TestDrawer(unittest.TestCase):
         self.assertIn('data-row="', TEMPLATE)
         self.assertIn('tabindex="0"', TEMPLATE)
 
+    def test_the_row_does_not_override_table_semantics(self):
+        """role="button" on a <tr> is not a permitted ARIA override - it would strip
+        the row out of the table's accessibility tree, so it must not be there."""
+        self.assertNotIn('role="button"', TEMPLATE)
+
+    def test_hiding_the_drawer_actually_hides_it(self):
+        """#drawer sets display:flex for its open state, which beats the UA [hidden]
+        rule unless the template also carries its own [hidden] override."""
+        self.assertIn("#drawer[hidden]{display:none}", TEMPLATE)
+
+    def test_the_drawer_rating_bar_has_a_visible_height(self):
+        """.d-fill only inherited transform/animation from the shared barGrow rule -
+        the actual height has to be extended onto it too, or the bar is invisible."""
+        self.assertIn(".rate .fill,.d-fill{height:100%;border-radius:2px}", TEMPLATE)
+
     def test_the_title_is_no_longer_a_link(self):
         self.assertNotIn('<a href="\' + g.steam_url', TEMPLATE)
 

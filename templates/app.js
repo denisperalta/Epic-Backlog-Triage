@@ -321,7 +321,7 @@
         name += '<span class="tag' + (g.steam_status === "delisted" ? " gone" : "") +
                 '" title="' + tip + '">' + esc(tag) + '</span>';
       }
-      return '<tr data-row="' + esc(g.title) + '" tabindex="0" role="button" aria-haspopup="dialog">' +
+      return '<tr data-row="' + esc(g.title) + '" tabindex="0" aria-haspopup="dialog">' +
         '<td class="num rank">' + (i + 1) + '</td>' +
         '<td class="name">' + name +
           (g.developer ? '<div class="dev">' + esc(g.developer) + '</div>' : '') + '</td>' +
@@ -371,7 +371,8 @@
         '<div class="d-top"><span class="d-pct t' + b + '">' + pct(g.rating, 2) + '</span>' +
         '<span class="d-desc">' + esc(reviewName(g.review_desc)) + '</span></div>' +
         '<div class="d-track"><div class="d-fill f' + b + '" style="width:' + g.rating + '%"></div></div>' +
-        '<div class="d-posneg" aria-label="' + esc(nfmt(g.reviews) + " " + t("reviews_n")) + '">' +
+        '<div class="d-posneg" role="group" aria-label="' +
+          esc(nfmt(g.reviews) + " " + t("reviews_n")) + '">' +
         '<span>' + esc(nfmt(g.positive) + " " + t("pos")) + '</span>' +
         '<span>' + esc(nfmt(g.negative) + " " + t("neg")) + '</span></div>';
     }
