@@ -30,22 +30,23 @@ LEGENDARY_HELP = """legendary is the Epic Games client this script reads your li
 def _run_legendary(args):
     """Run legendary and hand back the finished process.
 
-    pip does not always leave the console script somewhere PATH can see it - an
-    unactivated venv, a --user install on Windows - so fall back to calling the
-    package with this very interpreter before declaring it missing.
+    Invoked through this interpreter rather than a bare "legendary" on PATH:
+    pip does not always leave the console script somewhere PATH can see it,
+    and worse, a stray legendary.exe left on PATH by an unrelated (or since
+    removed) Python install can silently shadow the one actually installed
+    here - it gets found and run, so the fallback that used to sit behind it
+    never triggers, and whatever that stray copy does (or fails to do)
+    becomes the whole story.
     """
-    attempts = [["legendary"] + args,
-                [sys.executable, "-c", "from legendary.cli import main; main()"] + args]
-    for cmd in attempts:
-        try:
-            # Explicit UTF-8: legendary hands back JSON with the real game titles
-            # in it, and decoding those through a machine's local code page
-            # either mangles them or raises outright.
-            return subprocess.run(cmd, capture_output=True, timeout=600,
-                                  encoding="utf-8", errors="replace")
-        except FileNotFoundError:
-            continue
-    sys.exit("Could not run legendary.\n\n" + LEGENDARY_HELP)
+    cmd = [sys.executable, "-c", "from legendary.cli import main; main()"] + args
+    try:
+        # Explicit UTF-8: legendary hands back JSON with the real game titles
+        # in it, and decoding those through a machine's local code page
+        # either mangles them or raises outright.
+        return subprocess.run(cmd, capture_output=True, timeout=600,
+                              encoding="utf-8", errors="replace")
+    except FileNotFoundError:
+        sys.exit("Could not run legendary.\n\n" + LEGENDARY_HELP)
 
 
 def epic_library(refresh=False):
