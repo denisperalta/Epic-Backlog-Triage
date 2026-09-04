@@ -1,0 +1,235 @@
+:root{
+  /* Nocturne tokens, inlined from the design system's styles.css. */
+  --color-bg:#161826; --color-surface:#232532; --color-text:#e9e9ed;
+  --color-accent:#9184d9; --color-accent-2:#a7a1db;
+  --color-divider:color-mix(in srgb,#e9e9ed 16%,transparent);
+  --color-neutral-100:#f3f5fe; --color-neutral-200:#e4e7f5; --color-neutral-300:#cfd3e5;
+  --color-neutral-400:#b2b6ca; --color-neutral-500:#9397ab; --color-neutral-600:#75798c;
+  --color-neutral-700:#595d6c; --color-neutral-800:#3f424d; --color-neutral-900:#292b31;
+  --color-accent-100:#f5f4ff; --color-accent-200:#e7e5fe; --color-accent-300:#d2cefd;
+  --color-accent-400:#b5abfc; --color-accent-500:#968ae0; --color-accent-600:#796cbf;
+  --color-accent-700:#5d5294; --color-accent-800:#423a6a; --color-accent-900:#2b2741;
+  --font-heading:"Inter",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  --space-2:5.6px; --space-3:8.4px; --space-4:11.2px; --space-6:16.8px; --space-8:22.4px;
+  --radius-sm:4px; --radius-md:8px; --radius-lg:14px;
+  --shadow-md:0 0 0 1px #595d6c,0 6px 18px rgba(0,0,0,.55);
+
+  /* The report's own roles, aliased onto the tokens. Dark is the default. */
+  --bg:var(--color-bg); --surface:var(--color-surface);
+  --surface-2:var(--color-neutral-900);
+  --ink:var(--color-text); --muted:var(--color-neutral-500);
+  --faint:var(--color-neutral-600);
+  --line:var(--color-divider);
+  --line-soft:color-mix(in srgb,var(--color-text) 7%,transparent);
+  --accent:var(--color-accent);
+  --accent-soft:color-mix(in srgb,var(--color-accent) 14%,transparent);
+  --accent-ink:var(--color-accent-400);
+  --chip-ink:var(--color-accent-100);
+  --b1:#6aba77; --b2:#8ab45d; --b3:#b7a63d; --b4:#e08e53; --b5:#e8847c;
+  --shadow:var(--shadow-md);
+}
+/* The light theme inverts onto the accent ramps - band colours are derived separately. */
+:root[data-theme="light"]{
+  --bg:var(--color-accent-200); --surface:var(--color-accent-100);
+  --surface-2:color-mix(in srgb,var(--color-accent-200) 78%,var(--color-accent-300));
+  --ink:var(--color-neutral-900); --muted:var(--color-neutral-800);
+  --faint:var(--color-neutral-600);
+  --line:color-mix(in srgb,var(--color-neutral-900) 15%,transparent);
+  --line-soft:color-mix(in srgb,var(--color-neutral-900) 7%,transparent);
+  --accent:var(--color-accent-600);
+  --accent-soft:color-mix(in srgb,var(--color-accent-600) 12%,transparent);
+  --accent-ink:var(--color-accent-700);
+  --chip-ink:var(--color-accent-100);
+  --b1:#397945; --b2:#54752f; --b3:#776a0a; --b4:#965726; --b5:#9c4e49;
+  --shadow:0 1px 2px color-mix(in srgb,var(--color-neutral-900) 6%,transparent),
+           0 12px 30px -18px color-mix(in srgb,var(--color-neutral-900) 45%,transparent);
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --bg:var(--color-accent-200); --surface:var(--color-accent-100);
+    --surface-2:color-mix(in srgb,var(--color-accent-200) 78%,var(--color-accent-300));
+    --ink:var(--color-neutral-900); --muted:var(--color-neutral-800);
+    --faint:var(--color-neutral-600);
+    --line:color-mix(in srgb,var(--color-neutral-900) 15%,transparent);
+    --line-soft:color-mix(in srgb,var(--color-neutral-900) 7%,transparent);
+    --accent:var(--color-accent-600);
+    --accent-soft:color-mix(in srgb,var(--color-accent-600) 12%,transparent);
+    --accent-ink:var(--color-accent-700);
+    --chip-ink:var(--color-accent-100);
+    --b1:#397945; --b2:#54752f; --b3:#776a0a; --b4:#965726; --b5:#9c4e49;
+    --shadow:0 1px 2px color-mix(in srgb,var(--color-neutral-900) 6%,transparent),
+             0 12px 30px -18px color-mix(in srgb,var(--color-neutral-900) 45%,transparent);
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.55 var(--font-body);
+  -webkit-font-smoothing:antialiased}
+.wrap{display:flex;min-height:100vh;align-items:stretch}
+.rail{width:268px;flex:none;padding:22px 20px 28px;display:flex;flex-direction:column;
+  gap:20px;background:var(--surface-2);border-right:1px solid var(--line-soft);
+  position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 28px 26px}
+.rail .brand{display:flex;flex-direction:column;gap:3px}
+.rail .kicker{font:600 9.5px/1 var(--font-body);letter-spacing:.16em;
+  text-transform:uppercase;color:var(--accent)}
+/* Not `.name` - that class is already the table's title cell. */
+.rail .brandname{font:500 19px/1.1 var(--font-body);letter-spacing:-.02em}
+.rail .meta{font:400 11.5px/1.4 var(--mono);color:var(--faint);margin-top:2px;
+  font-variant-numeric:tabular-nums}
+.rail h2{font:600 9.5px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);margin:0 0 9px}
+@media (max-width:900px){
+  .wrap{display:block}
+  .rail{width:auto;height:auto;position:static;border-right:0;
+    border-bottom:1px solid var(--line-soft)}
+  .main{padding:0 16px 40px}
+}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;margin-bottom:22px}
+/* Groups the theme toggle with the language switcher so both sit right-aligned
+   as one unit, instead of the toggle sitting flush against the title block. */
+.mast .tools{display:flex;align-items:center;gap:10px;margin-left:auto;align-self:flex-start}
+h1{font:500 30px/1.1 var(--font-heading);letter-spacing:-.03em;
+  margin:0;text-wrap:balance}
+h1 em{font-style:normal;color:var(--accent)}
+.sub{color:var(--muted);font-size:12.5px;max-width:64ch;margin:9px 0 0}
+.sub code{font-family:var(--mono);font-size:12.5px;
+  background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.sub b{color:var(--ink);font-weight:600}
+
+/* ---------- stat tiles ---------- */
+.stats{display:flex;margin:22px 0 0;border-top:1px solid var(--line-soft);
+  border-bottom:1px solid var(--line-soft)}
+.tile{flex:1;padding:14px 18px 15px;border-left:1px solid var(--line-soft);
+  background:none;border-radius:0;box-shadow:none}
+.tile:first-child{border-left:0;padding-left:0}
+.tile .k{font:600 9px/1 var(--font-body);letter-spacing:.15em;text-transform:uppercase;
+  color:var(--faint)}
+.tile .v{font:500 26px/1.15 var(--font-heading);letter-spacing:-.03em;margin-top:7px;
+  font-variant-numeric:tabular-nums}
+.tile .n{font-size:11.5px;color:var(--muted);margin-top:2px}
+@media (max-width:900px){ .stats{flex-wrap:wrap} .tile{min-width:150px} }
+
+/* ---------- controls ---------- */
+input[type=search]{font:14px/1.2 var(--font-body);color:var(--ink);
+  background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 11px;
+  /* A rail is a column: a flex-basis here would stretch the box down the page. */
+  width:100%;flex:none}
+input:focus-visible,button:focus-visible,th:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px}
+input[type=range]{accent-color:var(--accent);width:100%;margin:0}
+#minrv{display:block;margin-top:5px;font:600 12.5px/1 var(--mono);color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.chiprail{display:flex;flex-wrap:wrap;gap:5px}
+.chiprail button{font:400 11.5px/1 var(--font-body);padding:6px 9px;
+  border-radius:var(--radius-sm);cursor:pointer;background:transparent;
+  color:var(--muted);border:1px solid var(--line)}
+.chiprail button:hover{border-color:var(--accent)}
+.chiprail button[aria-pressed="true"]{background:var(--accent-soft);
+  color:var(--accent-ink);border-color:var(--accent)}
+.chiprail button .n{margin-left:5px;font:400 11px/1 var(--mono);color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.statuslist{display:flex;flex-direction:column;gap:5px}
+.statuslist button{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;
+  border:0;border-radius:var(--radius-sm);cursor:pointer;text-align:left;
+  background:transparent;color:var(--muted);font:400 12.5px/1.2 var(--font-body)}
+.statuslist button:hover{background:var(--accent-soft)}
+.statuslist button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
+.statuslist .dot{width:5px;height:5px;flex:none;border-radius:50%;background:var(--faint)}
+.statuslist button[aria-pressed="true"] .dot{background:var(--accent)}
+.statuslist .n{margin-left:auto;font:400 11px/1 var(--mono);color:var(--faint);
+  font-variant-numeric:tabular-nums}
+.row2{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:9px}
+.row2[hidden]{display:none}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;
+  color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent);
+  border-radius:999px;padding:4px 6px 4px 11px}
+.chip button{font:600 14px/1 var(--font-body);color:inherit;background:none;
+  border:0;border-radius:999px;width:18px;height:18px;padding:0;cursor:pointer;opacity:.65}
+.chip button:hover{opacity:1;background:rgba(128,128,128,.22)}
+button.clear{font:13px var(--font-body);background:none;border:0;
+  color:var(--muted);padding:4px 6px;cursor:pointer;text-decoration:underline;
+  text-underline-offset:3px}
+button.clear:hover{color:var(--ink)}
+.count{margin-top:10px;font-size:13px;color:var(--muted);white-space:nowrap}
+.count b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+button.reset{font:13.5px var(--font-body);background:none;border:1px solid var(--line);
+  color:var(--muted);border-radius:7px;padding:8px 11px;cursor:pointer}
+button.reset:hover{color:var(--ink);border-color:var(--muted)}
+
+/* ---------- table ---------- */
+/* No overflow container at desktop widths: an overflow box would become the
+   containing scrollport for the sticky header, pinning it inside the table
+   instead of below the filter bar. Narrow screens trade sticky for scroll. */
+.scroll{background:none;border-top:0;margin-top:18px}
+table{border-collapse:collapse;width:100%;min-width:1020px}
+thead th{position:sticky;top:0;z-index:10;background:var(--bg);
+  font:600 9px/1.2 var(--font-body);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--faint);text-align:left;padding:0 12px 9px;
+  border-bottom:1px solid var(--line);cursor:pointer;white-space:nowrap;user-select:none}
+thead th:hover{color:var(--ink)}
+thead th[aria-sort]{color:var(--accent)}
+thead th .ar{opacity:.55;font-size:9px;margin-left:3px}
+tbody td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--accent-soft);box-shadow:inset 2px 0 0 var(--accent)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-size:13px;text-align:right;white-space:nowrap}
+.rank{color:var(--faint);font-size:12px;width:46px}
+.name{min-width:236px;max-width:340px}
+.name a{color:var(--ink);text-decoration:none;display:block;text-underline-offset:2px;
+  font:500 13.5px/1.25 var(--font-body);letter-spacing:-.01em}
+.name a[href]:hover{text-decoration:underline;color:var(--accent-ink)}
+.name .dev{color:var(--faint);font-size:11.5px;margin-top:2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.taglist{display:flex;flex-wrap:wrap;gap:4px;min-width:150px;max-width:220px}
+.taglist span{font-size:11px;color:var(--muted);background:none;
+  border:1px solid var(--line-soft);border-radius:var(--radius-sm);padding:1px 7px;
+  white-space:nowrap}
+
+/* review bar: proportion positive, coloured by Steam's own tier */
+.rate{min-width:152px}
+.rate .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rate .pct{font-family:var(--mono);font-size:13px;font-weight:600;
+  font-variant-numeric:tabular-nums}
+.rate .desc{font-size:10.5px;color:var(--faint);text-align:right;line-height:1.2}
+.rate .track{height:3px;background:var(--line-soft);border-radius:2px;margin-top:5px;
+  overflow:hidden}
+.rate .fill{height:100%;border-radius:2px}
+.t1{color:var(--b1)} .t2{color:var(--b2)} .t3{color:var(--b3)}
+.t4{color:var(--b4)} .t5{color:var(--b5)}
+.f1{background:var(--b1)} .f2{background:var(--b2)} .f3{background:var(--b3)}
+.f4{background:var(--b4)} .f5{background:var(--b5)}
+.mode{font-size:11px;color:var(--muted);white-space:nowrap;letter-spacing:.02em}
+.dash{color:var(--faint)}
+.tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;border-radius:var(--radius-sm);padding:1px 5px;margin-left:6px;
+  vertical-align:2px;white-space:nowrap;border:1px solid var(--line);
+  background:var(--surface-2);color:var(--muted)}
+.tag.gone{color:var(--accent-ink);border-color:var(--accent);background:transparent}
+.empty{padding:52px 20px;text-align:center;color:var(--muted)}
+.foot{display:block;margin-top:18px;font-size:12.5px;color:var(--faint);line-height:1.65;max-width:96ch}
+.foot code{font-family:var(--mono);font-size:11.5px}
+/* ---------- theme toggle ---------- */
+.theme{display:inline-flex;align-items:center;gap:7px;
+  font:600 10.5px/1 var(--mono);letter-spacing:.1em;padding:8px 12px;cursor:pointer;
+  border:1px solid var(--line);border-radius:var(--radius-md);background:transparent;
+  color:var(--muted)}
+.theme:hover{color:var(--accent);border-color:var(--accent)}
+.theme .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor}
+:root[data-theme="light"] .theme .dot{background:currentColor}
+/* ---------- language switcher ---------- */
+.lang{display:inline-flex;gap:2px;padding:2px;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  box-shadow:var(--shadow)}
+.lang button{font:600 12px/1 var(--mono);letter-spacing:.06em;
+  background:none;border:0;border-radius:6px;padding:7px 11px;color:var(--muted);cursor:pointer}
+.lang button:hover{color:var(--ink)}
+.lang button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
+
+@media (max-width:1080px){ .scroll{overflow-x:auto} }
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}

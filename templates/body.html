@@ -1,0 +1,80 @@
+
+<div class="wrap">
+  <aside class="rail">
+    <div class="brand">
+      <div class="kicker">Epic backlog</div>
+      <div class="brandname">Triage</div>
+      <div class="meta" id="railmeta"></div>
+    </div>
+
+    <input type="search" id="q" data-i18n-ph="ph_search" data-i18n-al="al_search"
+           placeholder="Search title, tag or developer&hellip;" aria-label="Search">
+
+    <div>
+      <h2 id="h-tags" data-i18n="f_tags">Tags</h2>
+      <div class="chiprail" id="tagchips" role="group" aria-labelledby="h-tags"></div>
+      <div class="row2" id="chips" hidden role="group" data-i18n-al="al_chips"
+           aria-label="Tags being filtered on"></div>
+    </div>
+
+    <div>
+      <h2 id="h-status" data-i18n="f_status">Steam status</h2>
+      <div id="statuslist" class="statuslist" role="group" aria-labelledby="h-status"></div>
+    </div>
+
+    <div>
+      <h2 data-i18n="f_minr">Min reviews</h2>
+      <input type="range" id="minr" min="0" max="5" step="1" value="1"
+             data-i18n-al="al_minr" aria-label="Minimum review count">
+      <b id="minrv">100</b>
+    </div>
+
+    <div>
+      <h2 id="h-modes" data-i18n="f_modes">Modes</h2>
+      <div class="chiprail" id="modechips" role="group" aria-labelledby="h-modes"></div>
+    </div>
+
+    <button class="reset" id="reset" type="button" data-i18n="btn_reset">Reset</button>
+  </aside>
+
+  <main class="main">
+    <div class="mast">
+      <div>
+        <h1 data-i18n-html="h1">What should I <em>actually</em> play?</h1>
+        <p class="sub" data-i18n-html="sub">Games in the Epic library, pulled with <code>legendary</code>
+        and scored against live Steam review data.</p>
+      </div>
+      <div class="tools">
+        <button type="button" id="theme" class="theme" data-i18n-al="al_theme"></button>
+        <div class="lang" role="group" data-i18n-al="al_lang" aria-label="Language">
+          <button type="button" data-lang="es" data-i18n="lang_es">ES</button>
+          <button type="button" data-lang="en" data-i18n="lang_en">EN</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th data-k="rank" style="cursor:default">#</th>
+          <th data-k="title"><span data-i18n="th_game">Game</span> <span class="ar"></span></th>
+          <th data-k="sort_score" data-num="1"><span data-i18n="th_conf">Confidence</span> <span class="ar"></span></th>
+          <th data-k="rating" data-num="1"><span data-i18n="th_rating">Steam rating</span> <span class="ar"></span></th>
+          <th data-k="reviews" data-num="1"><span data-i18n="th_reviews">Reviews</span> <span class="ar"></span></th>
+          <th data-k="tags"><span data-i18n="th_tags">Tags</span> <span class="ar"></span></th>
+__HOURS_TH__          <th data-k="year" data-num="1"><span data-i18n="th_year">Year</span> <span class="ar"></span></th>
+          <th data-k="mode"><span data-i18n="th_modes">Modes</span> <span class="ar"></span></th>
+        </tr></thead>
+        <tbody id="body"></tbody>
+      </table>
+    </div>
+    <div id="none" class="empty" hidden data-i18n="empty">Nothing matches those filters.</div>
+    <span class="count" id="count"><b>0</b> shown</span>
+
+    <p class="foot" id="foot"></p>
+  </main>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>

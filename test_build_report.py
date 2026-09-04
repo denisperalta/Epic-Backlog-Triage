@@ -1,5 +1,5 @@
 """Tests for the report's two-language text: the pairs that silently drift apart."""
-import contextlib, io, json, os, re, tempfile, unittest
+import contextlib, hashlib, io, json, os, re, tempfile, unittest
 
 import build_report
 from build_report import HOURS_TH, I18N, TEMPLATE
@@ -235,6 +235,31 @@ class TestLayout(unittest.TestCase):
         """The filter bar is gone; a stray syncBar call would blank the page."""
         for dead in ("syncBar", "--barh"):
             self.assertNotIn(dead, TEMPLATE)
+
+
+class TestTemplateSplit(unittest.TestCase):
+    """Splitting TEMPLATE into files must not change a single byte of output."""
+
+    # sha256 of out/report.html built from the TestBuild fixture, captured from the
+    # pre-split TEMPLATE. If this stops matching, the split changed something.
+    GOLDEN_SHA256 = "0858411f51357b3a33ce91afc4050338b4bbf52292e02842e383d64da063da7b"
+
+    def test_the_split_build_is_byte_identical_to_before(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(setattr, build_report, "OUT", build_report.OUT)
+        build_report.OUT = tmp
+        with open(os.path.join(tmp, "games.json"), "w", encoding="utf-8") as fh:
+            json.dump([{"title": "A Game", "steam_status": "listed", "rating": 92.5,
+                        "reviews": 1200, "sort_score": 90.8, "review_desc": "Very Positive",
+                        "tags": ["Action"], "release_date": "2020-01-01",
+                        "developer": "Someone", "singleplayer": True},
+                       {"title": "Gone Game", "steam_status": "delisted", "rating": None,
+                        "reviews": 0, "tags": []}], fh)
+        with contextlib.redirect_stdout(io.StringIO()):
+            build_report.build()
+        with open(os.path.join(tmp, "report.html"), encoding="utf-8") as fh:
+            html = fh.read()
+        self.assertEqual(hashlib.sha256(html.encode("utf-8")).hexdigest(), self.GOLDEN_SHA256)
 
 
 if __name__ == "__main__":
