@@ -200,6 +200,8 @@
   // previous render to find what moved.
   var VISIBLE = [];
 
+  var FLIP_PENDING = false;
+
   var SEL = null;
   var LAST_FOCUS = null;
 
@@ -284,6 +286,13 @@
   }
 
   function render(){
+    var old = null;
+    if (FLIP_PENDING) {
+      old = {};
+      each("[data-row]", function(el){
+        old[el.getAttribute("data-row")] = el.getBoundingClientRect();
+      });
+    }
     var rows = GAMES.filter(passes);
     // sortDir: 1 ascending, -1 descending - the same sense for text and numbers.
     rows.sort(function(a, b){
@@ -340,8 +349,27 @@
     }).join("");
     VISIBLE = rows;
 
+    if (old) {
+      flip(old);
+      FLIP_PENDING = false;
+    }
+
     $("count").innerHTML = t("count", {n: nfmt(rows.length)});
     $("none").hidden = rows.length > 0;
+  }
+
+  function flip(old){
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    each("[data-row]", function(el){
+      var was = old[el.getAttribute("data-row")];
+      if (!was) return;
+      var now = el.getBoundingClientRect();
+      var dx = was.left - now.left, dy = was.top - now.top;
+      if (!dx && !dy) return;
+      el.animate(
+        [{transform: "translate(" + dx + "px," + dy + "px)"}, {transform: "none"}],
+        {duration: 320, easing: "cubic-bezier(.2,.8,.2,1)"});
+    });
   }
 
   function pad2(n){ return (n < 10 ? "0" : "") + n; }
@@ -451,6 +479,7 @@
       var ar = th.querySelector(".ar");
       if (ar) ar.textContent = dir === 1 ? "▲" : "▼";
     }
+    FLIP_PENDING = true;
     render();
   }
 

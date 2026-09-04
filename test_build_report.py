@@ -237,6 +237,17 @@ class TestLayout(unittest.TestCase):
             self.assertNotIn(dead, TEMPLATE)
 
 
+class TestFlip(unittest.TestCase):
+    """Rows animate to their new rank on sort, and only on sort."""
+
+    def test_flip_is_armed_from_apply_sort_only(self):
+        self.assertEqual(TEMPLATE.count("FLIP_PENDING = true"), 1)
+        self.assertIn("function applySort(", TEMPLATE)
+
+    def test_flip_respects_reduced_motion(self):
+        self.assertIn('matchMedia("(prefers-reduced-motion: reduce)")', TEMPLATE)
+
+
 class TestDrawer(unittest.TestCase):
     """The row is a keyed, keyboard-operable click target that opens a detail drawer."""
 
