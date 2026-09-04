@@ -53,10 +53,15 @@ echo [3/7] legendary installed
 
 rem -------------------------------------------------------- 4. self-check
 rem Fast and offline. Running it here means a half-applied edit or a damaged
-rem checkout is caught before the Epic login and the Steam fetching,
-rem rather than after. Silent unless something is actually wrong.
+rem checkout is caught before the Epic login and the Steam fetching, rather
+rem than after. Silent unless something is actually wrong. The release zip
+rem ships without test_*.py (dev-only, not needed to run) - unittest
+rem discover finding zero tests exits nonzero ("NO TESTS RAN"), which would
+rem read as a broken checkout when there is really just nothing to check.
+if not exist "test_*.py" goto :self_checked
 "%VPY%" -m unittest discover -b >nul 2>&1
 if errorlevel 1 goto :tests_failed
+:self_checked
 echo [4/7] scripts self-checked
 
 rem ------------------------------------------------------- 5. Epic account

@@ -71,7 +71,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
 .rail{width:268px;flex:none;padding:22px 20px 28px;display:flex;flex-direction:column;
   gap:20px;background:var(--surface-2);border-right:1px solid var(--line-soft);
   position:sticky;top:0;height:100vh;overflow-y:auto}
-.main{flex:1;min-width:0;display:flex;flex-direction:column;padding:0 28px 26px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;padding:24px 28px 26px}
 .rail .brand{display:flex;flex-direction:column;gap:3px}
 .rail .kicker{font:600 9.5px/1 var(--font-body);letter-spacing:.16em;
   text-transform:uppercase;color:var(--accent)}
@@ -85,7 +85,7 @@ body{margin:0;background:var(--bg);color:var(--ink);
   .wrap{display:block}
   .rail{width:auto;height:auto;position:static;border-right:0;
     border-bottom:1px solid var(--line-soft)}
-  .main{padding:0 16px 40px}
+  .main{padding:16px 16px 40px}
 }
 
 /* ---------- masthead ---------- */
