@@ -123,8 +123,13 @@ rem itself against 0 is not fooled by the sign.
 call winget list --id Python.Python.3.12 -e >nul 2>&1
 if %errorlevel% equ 0 goto :winget_installed
 
-set /p "WINGET_CONFIRM=  Install Python 3.12 now via winget? [Y/N] "
-if /i not "%WINGET_CONFIRM%"=="Y" goto :no_python_manual
+rem Pre-set the default so WINGET_CONFIRM is always defined: set /p leaves an
+rem existing value untouched on empty input, but leaves it flat-out undefined
+rem if there was no prior value - and %VAR:~0,1% on an undefined variable
+rem corrupts the rest of the line instead of expanding to nothing.
+set "WINGET_CONFIRM=Y"
+set /p "WINGET_CONFIRM=  Install Python 3.12 now via winget? [Y/n] "
+if /i "%WINGET_CONFIRM:~0,1%"=="n" goto :no_python_manual
 
 echo.
 echo   Installing Python 3.12 via winget ...
@@ -207,8 +212,32 @@ set "PY="
 py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
 if not errorlevel 1 set "PY=py -3"
 if defined PY exit /b 0
+
+rem winget's per-user Python install doesn't reliably register the py
+rem launcher, and its own python.exe can land *behind* the Microsoft Store's
+rem stub in PATH order - "where python" would pick the stub, which prints an
+rem install nag and exits nonzero, over the real interpreter sitting right
+rem next to it. Check the known python.org/winget install locations by exact
+rem path instead of trusting PATH search to find the right one. These are
+rem plain single-line loops, not do-(...)-blocks: %ProgramFiles(x86)% has
+rem literal parentheses in the name, which breaks cmd's block parser inside
+rem a parenthesized for/if body.
+for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do call :_try_pydir "%%D"
+if defined PY exit /b 0
+for /d %%D in ("%ProgramFiles%\Python3*") do call :_try_pydir "%%D"
+if defined PY exit /b 0
+for /d %%D in ("%ProgramFiles(x86)%\Python3*") do call :_try_pydir "%%D"
+if defined PY exit /b 0
+
 python -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
 if not errorlevel 1 set "PY=python"
+exit /b 0
+
+:_try_pydir
+if defined PY exit /b 0
+if not exist "%~1\python.exe" exit /b 0
+"%~1\python.exe" -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
+if not errorlevel 1 set "PY="%~1\python.exe""
 exit /b 0
 
 :refresh_path
