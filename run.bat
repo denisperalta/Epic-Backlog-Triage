@@ -2,9 +2,10 @@
 rem ---------------------------------------------------------------------------
 rem  Epic Backlog Triage - one-click setup and run.
 rem
-rem  Double-click this file. It finds Python, builds a private virtual
-rem  environment, installs legendary, checks itself over, walks you through
-rem  the Epic login the first time, then produces out\report.html and opens it.
+rem  Double-click this file. It finds Python (offering to install it via
+rem  winget if missing), builds a private virtual environment, installs
+rem  legendary, checks itself over, walks you through the Epic login the
+rem  first time, then produces out\report.html and opens it.
 rem
 rem  Any arguments are passed through to epic_steam.py, so   run.bat --refresh
 rem  re-queries your Epic library instead of reusing the cached copy.
@@ -114,10 +115,44 @@ goto :done
 
 rem ------------------------------------------------------------- failures
 :no_python
+if defined EGL_PY_RELAUNCH goto :relaunch_failed
+
 echo   Python 3.8 or newer was not found.
 echo.
+
+where winget >nul 2>&1
+if errorlevel 1 goto :no_python_manual
+
+call winget list --id Python.Python.3.12 -e >nul
+if not errorlevel 1 goto :winget_relaunch
+
+set /p "WINGET_CONFIRM=  Install Python 3.12 now via winget? [Y/N] "
+if /i not "%WINGET_CONFIRM%"=="Y" goto :no_python_manual
+
+echo.
+echo   Installing Python 3.12 via winget ...
+call winget install -e --id Python.Python.3.12
+if errorlevel 1 goto :no_python_manual
+
+:winget_relaunch
+echo.
+echo   Continuing in a new terminal window so it picks up the updated PATH ...
+set "EGL_PY_RELAUNCH=1"
+start "Epic Backlog Triage" "%~dp0run.bat" %*
+exit /b 0
+
+:no_python_manual
 echo   Install it from  https://www.python.org/downloads/
 echo   and tick "Add python.exe to PATH" in the installer, then run this again.
+goto :failed
+
+:relaunch_failed
+echo   Python 3.8 or newer still was not found, even in a new terminal after
+echo   installing.
+echo.
+echo   Close all terminal windows ^(or restart your computer^) and run this
+echo   again. If it still fails, install it by hand from
+echo   https://www.python.org/downloads/ and tick "Add python.exe to PATH".
 goto :failed
 
 :wrong_folder

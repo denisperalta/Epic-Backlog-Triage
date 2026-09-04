@@ -1,5 +1,5 @@
 """Tests for the report's two-language text: the pairs that silently drift apart."""
-import contextlib, io, json, os, re, tempfile, unittest
+import contextlib, datetime, io, json, os, re, tempfile, unittest
 
 import build_report
 from build_report import HOURS_TH, I18N, TEMPLATE
@@ -300,3 +300,70 @@ class TestDrawer(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDocumentIntegrity(unittest.TestCase):
+    """The rendered file is a whole, honest HTML document.
+
+    These cover three defects that survived the templates/ split: the page had no
+    document shell at all, the footer date claimed "today" rather than the day the
+    data was fetched, and the ordered replace() chain let substituted text be
+    substituted again.
+    """
+
+    GAMES = [{"title": "A Game", "steam_status": "listed", "rating": 92.5,
+              "reviews": 1200, "sort_score": 90.8, "review_desc": "Very Positive",
+              "tags": ["Action"], "release_date": "2020-01-01",
+              "developer": "Someone", "singleplayer": True}]
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(setattr, build_report, "OUT", build_report.OUT)
+        build_report.OUT = self.tmp
+        self.src = os.path.join(self.tmp, "games.json")
+
+    def write(self, games):
+        with open(self.src, "w", encoding="utf-8") as fh:
+            json.dump(games, fh)
+
+    def build(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            build_report.build()
+        with open(os.path.join(self.tmp, "report.html"), encoding="utf-8") as fh:
+            return fh.read()
+
+    def test_the_page_is_a_whole_document(self):
+        """Without a shell the browser parses in quirks mode and guesses the encoding.
+
+        Quirks mode stops the table inheriting body's 14px/1.55, and an undeclared
+        encoding is left to detection - which is usually right, and is still a guess.
+        """
+        self.write(self.GAMES)
+        html = self.build()
+        self.assertTrue(html.lstrip().lower().startswith("<!doctype html>"),
+                        "the export does not begin with a doctype")
+        self.assertIn('<meta charset="utf-8">', html)
+        self.assertIn("<html lang=", html)
+        self.assertIn('<meta name="viewport"', html)
+
+    def test_the_stamp_is_the_day_the_data_was_fetched(self):
+        """date.today() is a lie for any page read later than it was built."""
+        self.write(self.GAMES)
+        when = datetime.datetime(2020, 6, 15, 12, 0, 0)   # midday: no timezone rollover
+        os.utime(self.src, (when.timestamp(), when.timestamp()))
+        nums = json.loads(re.search(r"var N = (\{.*?\});", self.build(), re.S).group(1))
+        self.assertEqual(nums["stamp"], "2020-06-15")
+
+    def test_substituted_text_is_never_substituted_again(self):
+        """Tags come from Steam, so they are page content, not page structure.
+
+        The chain filled __TAGS__ before __NUMS__, so a tag spelled like a later
+        placeholder was substituted a second time - landing the whole nums object
+        inside the tag string and breaking the page with a JavaScript syntax error.
+        """
+        self.write([dict(self.GAMES[0], tags=["__NUMS__"])])
+        html = self.build()
+        self.assertNotIn('"count"', re.search(r"var TAGS = .*", html).group(0),
+                         "the nums object was substituted into the tag rail")
+        tags = json.loads(re.search(r"var TAGS = (\[.*?\]);", html).group(1))
+        self.assertEqual(tags, [["__NUMS__", 1]])

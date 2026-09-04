@@ -1,5 +1,5 @@
 """Render out/games.json into a single self-contained HTML report."""
-import json, os, datetime
+import json, os, re, datetime
 from collections import Counter
 
 from steamlib import use_utf8_stdout
@@ -297,10 +297,27 @@ def _tpl(name):
         return fh.read()
 
 
-TEMPLATE = (_tpl("head.html")
+# A whole document, not a fragment. Without the doctype the table does not inherit
+# body's font, so the cells fall back to the browser's 16px/normal instead of the
+# 14px/1.55 the stylesheet asks for. Without the charset the encoding is left to the
+# browser's guess - usually right, but it is a guess, and the report is opened over
+# file:// where no Content-Type can settle it.
+TEMPLATE = ('<!doctype html>\n'
+            '<html lang="en">\n'
+            '<head>\n'
+            '<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+            + _tpl("head.html")
             + "<style>\n" + _tpl("style.css") + "</style>\n"
+            + "</head>\n<body>\n"
             + _tpl("body.html")
-            + "<script>\n" + _tpl("app.js") + "</script>\n")
+            + "<script>\n" + _tpl("app.js") + "</script>\n"
+            + "</body>\n</html>\n")
+
+# Filled in one pass, so text that is substituted in is never substituted again.
+# A function as the replacement also stops a backslash in the JSON being read as a
+# group reference.
+_PLACEHOLDER = re.compile(r"__(TAGS|STATUS_N|HOURS_TH|I18N|TAG_MAP|REVIEW_MAP|NUMS|DATA)__")
 
 
 def _median(xs):
@@ -345,7 +362,7 @@ def build():
         "notOnSteam": verdicts["not-on-steam"],
         "duplicate": verdicts["duplicate"],
         "unknown": verdicts["unknown"],
-        "stamp": datetime.date.today().isoformat(),
+        "stamp": datetime.date.fromtimestamp(os.path.getmtime(src)).isoformat(),
     }
 
     # The rail shows the tags worth browsing at a glance; the search box,
@@ -359,15 +376,18 @@ def build():
                 ("listed", "delisted", "not-on-steam", "duplicate", "unreleased", "unknown")}
     status_n[""] = len(games)
 
-    html = (TEMPLATE
-            .replace("__TAGS__", _json(top_tags))
-            .replace("__STATUS_N__", _json(status_n))
-            .replace("__HOURS_TH__", HOURS_TH if hours else "")
-            .replace("__I18N__", _json(I18N))
-            .replace("__TAG_MAP__", _json(TAG_ES))
-            .replace("__REVIEW_MAP__", _json(REVIEW_ES))
-            .replace("__NUMS__", _json(nums))
-            .replace("__DATA__", _json(games)))
+    # Chained replace() filled __TAGS__ before __NUMS__, so a Steam tag spelled
+    # like a later placeholder was substituted twice - landing the whole nums
+    # object inside the tag string and breaking the page's JavaScript.
+    values = {"TAGS": _json(top_tags),
+              "STATUS_N": _json(status_n),
+              "HOURS_TH": HOURS_TH if hours else "",
+              "I18N": _json(I18N),
+              "TAG_MAP": _json(TAG_ES),
+              "REVIEW_MAP": _json(REVIEW_ES),
+              "NUMS": _json(nums),
+              "DATA": _json(games)}
+    html = _PLACEHOLDER.sub(lambda m: values[m.group(1)], TEMPLATE)
 
     path = os.path.join(OUT, "report.html")
     with open(path, "w", encoding="utf-8") as fh:
