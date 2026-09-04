@@ -115,8 +115,13 @@ echo.
 where winget >nul 2>&1
 if errorlevel 1 goto :no_python_manual
 
-call winget list --id Python.Python.3.12 -e >nul
-if not errorlevel 1 goto :winget_installed
+rem winget's exit codes are HRESULTs - large enough that cmd.exe reads them as
+rem negative when it stores the value as a signed int. "if not errorlevel 1"
+rem tests errorlevel < 1, which a negative code always satisfies, so that
+rem style of check reads "not installed" as success. Comparing %errorlevel%
+rem itself against 0 is not fooled by the sign.
+call winget list --id Python.Python.3.12 -e >nul 2>&1
+if %errorlevel% equ 0 goto :winget_installed
 
 set /p "WINGET_CONFIRM=  Install Python 3.12 now via winget? [Y/N] "
 if /i not "%WINGET_CONFIRM%"=="Y" goto :no_python_manual
@@ -124,7 +129,7 @@ if /i not "%WINGET_CONFIRM%"=="Y" goto :no_python_manual
 echo.
 echo   Installing Python 3.12 via winget ...
 call winget install -e --id Python.Python.3.12
-if errorlevel 1 goto :no_python_manual
+if %errorlevel% neq 0 goto :no_python_manual
 
 :winget_installed
 rem The installer just wrote a new PATH to the registry, but this process's
