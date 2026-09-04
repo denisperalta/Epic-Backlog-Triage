@@ -22,15 +22,9 @@ echo   ===================
 echo.
 
 rem ------------------------------------------------------- 1. find a Python
-rem The py launcher first: on Windows a bare "python" is often the Microsoft
-rem Store stub, which is not a Python at all.
-set "PY="
-py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
-if not errorlevel 1 set "PY=py -3"
+call :detect_python
 if defined PY goto :have_python
-python -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
-if not errorlevel 1 set "PY=python"
-if not defined PY goto :no_python
+goto :no_python
 
 :have_python
 echo [1/7] Python 3.8+ found
@@ -115,8 +109,6 @@ goto :done
 
 rem ------------------------------------------------------------- failures
 :no_python
-if defined EGL_PY_RELAUNCH goto :relaunch_failed
-
 echo   Python 3.8 or newer was not found.
 echo.
 
@@ -124,7 +116,7 @@ where winget >nul 2>&1
 if errorlevel 1 goto :no_python_manual
 
 call winget list --id Python.Python.3.12 -e >nul
-if not errorlevel 1 goto :winget_relaunch
+if not errorlevel 1 goto :winget_installed
 
 set /p "WINGET_CONFIRM=  Install Python 3.12 now via winget? [Y/N] "
 if /i not "%WINGET_CONFIRM%"=="Y" goto :no_python_manual
@@ -134,25 +126,27 @@ echo   Installing Python 3.12 via winget ...
 call winget install -e --id Python.Python.3.12
 if errorlevel 1 goto :no_python_manual
 
-:winget_relaunch
+:winget_installed
+rem The installer just wrote a new PATH to the registry, but this process's
+rem copy of PATH is still the one it started with - re-reading the registry
+rem in-process picks it up without needing a fresh window from Explorer.
 echo.
-echo   Continuing in a new terminal window so it picks up the updated PATH ...
-set "EGL_PY_RELAUNCH=1"
-start "Epic Backlog Triage" "%~dp0run.bat" %*
-exit /b 0
+echo   Picking up the updated PATH ...
+call :refresh_path
+call :detect_python
+if defined PY goto :have_python
+
+echo   Python 3.8 or newer still was not found after installing.
+echo.
+echo   Close this window and run run.bat again - a fresh process from Explorer
+echo   will pick up the new PATH even if this one still can't see it. If it
+echo   still fails, install it by hand from https://www.python.org/downloads/
+echo   and tick "Add python.exe to PATH".
+goto :failed
 
 :no_python_manual
 echo   Install it from  https://www.python.org/downloads/
 echo   and tick "Add python.exe to PATH" in the installer, then run this again.
-goto :failed
-
-:relaunch_failed
-echo   Python 3.8 or newer still was not found, even in a new terminal after
-echo   installing.
-echo.
-echo   Close all terminal windows ^(or restart your computer^) and run this
-echo   again. If it still fails, install it by hand from
-echo   https://www.python.org/downloads/ and tick "Add python.exe to PATH".
 goto :failed
 
 :wrong_folder
@@ -201,6 +195,24 @@ if not errorlevel 1 pause
 exit /b %RC%
 
 rem ---------------------------------------------------------------- helpers
+:detect_python
+rem The py launcher first: on Windows a bare "python" is often the Microsoft
+rem Store stub, which is not a Python at all.
+set "PY="
+py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
+if not errorlevel 1 set "PY=py -3"
+if defined PY exit /b 0
+python -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
+if not errorlevel 1 set "PY=python"
+exit /b 0
+
+:refresh_path
+rem GetEnvironmentVariable resolves embedded references like %SystemRoot% -
+rem the raw registry string does not, so parsing it by hand would leave PATH
+rem full of literal, un-expanded percent tokens.
+for /f "usebackq delims=" %%P in (`powershell -NoProfile -Command "[System.Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [System.Environment]::GetEnvironmentVariable('Path','User')"`) do set "PATH=%%P"
+exit /b 0
+
 :check_auth
 rem Exit code 0 when legendary has saved credentials. "legendary status"
 rem cannot be used for this: it reports "<not logged in>" and still exits 0.
