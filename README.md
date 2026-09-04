@@ -1,57 +1,68 @@
 # Epic Backlog Triage
 
-Pulls your Epic Games library with [legendary](https://github.com/derrod/legendary) and scores every
-title against live Steam review data, so you can pick something to play instead of scrolling a
-launcher full of free-giveaway games you have never opened.
+**English version:** [README.en.md](README.en.md)
 
-The output is `out/report.html`: one self-contained page, sortable and filterable, that works
-offline and needs no server. It reads in English or Spanish — it opens in whichever your system
-is set to, and the `ES`/`EN` switch at the top right overrides that and remembers the choice.
-Nothing in this repository is specific to the person who wrote it — clone it, connect your own
-Epic account, and you get your own library ranked the same way.
+## Resumen
 
-![The report: 389 games from one Epic library, ranked by confidence score](docs/screenshot.png)
+Descarga tu biblioteca de Epic Games con [legendary](https://github.com/derrod/legendary), cruza
+cada título con las reseñas de Steam y genera un único informe HTML sin conexión, ordenado por una
+puntuación de confianza — para que elijas algo a qué jugar en vez de desplazarte por un launcher
+lleno de juegos que nunca abriste. Nada está ligado a la cuenta del autor original: clona el
+repositorio, conecta tu propia cuenta de Epic y obtén tu propia biblioteca, ordenada igual. En
+Windows basta con hacer doble clic en `run.bat`; el resto sigue los tres comandos de
+[Configuración manual](#configuración-manual).
 
-The top of one real library. Every number on the page came from Steam that morning; the row
-ranked ninth is a game Steam no longer sells.
+## Índice
 
-## What you need
+- [Qué necesitas](#qué-necesitas)
+- [Inicio rápido (Windows)](#inicio-rápido-windows)
+- [Configuración manual](#configuración-manual)
+- [Leer el informe](#leer-el-informe)
+- [Qué se genera](#qué-se-genera)
+- [Cómo se calculan los números](#cómo-se-calculan-los-números)
+- [Por qué un juego no tiene puntuación](#por-qué-un-juego-no-tiene-puntuación)
+- [La puntuación de confianza](#la-puntuación-de-confianza)
+- [Tiempo de juego](#tiempo-de-juego)
+- [Solución de problemas](#solución-de-problemas)
+- [Archivos](#archivos)
+- [Licencia](#licencia)
+
+![El informe: 389 juegos de una biblioteca de Epic, ordenados por puntuación de confianza](docs/screenshot.png)
+
+## Qué necesitas
 
 | | |
 |---|---|
-| **Python 3.8 or newer** | Everything here is standard library only |
-| **An Epic Games account** | Read-only: the library listing, nothing else |
-| **A couple of minutes** | Every HTTP response is cached, so later runs take seconds |
+| **Python 3.8 o superior** | Solo usa la biblioteca estándar |
+| **Una cuenta de Epic Games** | Solo lectura: nada más que el listado de tu biblioteca |
+| **Un par de minutos** | Cada respuesta HTTP queda en caché, así que las siguientes ejecuciones tardan segundos |
 
-Windows, macOS and Linux all work. The Epic Games Launcher does **not** need to be installed.
+Funciona en Windows, macOS y Linux. No hace falta tener instalado el Epic Games Launcher.
 
-## Quick start (Windows)
+## Inicio rápido (Windows)
 
-Download or clone the repository, then **double-click `run.bat`**. It performs every step in the
-next section for you:
+Descarga o clona el repositorio y haz doble clic en `run.bat`. Esto:
 
-1. finds a Python 3.8+ — the `py` launcher first, so it never trips over the Microsoft Store stub
-2. builds a private `.venv` inside the folder, touching nothing else on the machine
-3. installs legendary into it
-4. runs the test suite over itself — offline and silent unless something is broken, so a bad
-   checkout stops here rather than minutes into fetching
-5. opens the Epic login the first time, and skips straight past it on every run after
-6. fetches your library and the Steam data, retries the titles that did not match, and settles
-   which of the rest are delisted
-7. renders `out/report.html`, prints the delisted count, and opens the page in your browser
+1. busca un Python 3.8+ (primero el lanzador `py`, para no toparse con el stub de Microsoft Store)
+2. crea un `.venv` privado dentro de la carpeta
+3. instala legendary en él
+4. ejecuta la batería de pruebas, así que un checkout roto se detiene aquí y no a mitad de la
+   descarga
+5. abre el login de Epic solo la primera vez
+6. descarga tu biblioteca y los datos de Steam, reintenta lo que falló y decide qué está
+   descatalogado
+7. genera `out/report.html` y lo abre
 
-Run it as often as you like: it reuses the environment and the cache, so a second run takes seconds
-rather than minutes. Anything you pass goes through to the fetch step, so `run.bat --refresh`
-re-reads your Epic library instead of the cached copy.
+Puedes ejecutarlo tantas veces como quieras: reutiliza el entorno y la caché, así que las
+siguientes ejecuciones tardan segundos. Los argumentos pasan al paso de descarga: `run.bat
+--refresh` vuelve a leer tu biblioteca de Epic en vez de usar la copia en caché. Si un paso falla,
+se detiene ahí y explica qué hacer; la ventana se queda abierta para que puedas leerlo.
 
-If a step fails it stops there and says what to do about it, and the window stays open so you can
-read it.
+## Configuración manual
 
-## Setup by hand
+Úsala en macOS/Linux, o en Windows si prefieres hacerlo tú mismo paso a paso.
 
-Do this on macOS and Linux, or on Windows if you would rather drive it yourself.
-
-### 1. Get the code and install legendary
+### 1. Obtén el código e instala legendary
 
 ```sh
 git clone <this-repo-url>
@@ -64,169 +75,161 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-On macOS and Linux, use `python3` wherever this README says `python`.
+En macOS/Linux usa `python3` donde este documento dice `python`. El entorno virtual es opcional —
+`python -m pip install --user legendary-gl` también funciona; si tu shell luego no encuentra el
+comando `legendary`, los scripts recurren a ejecutarlo con el mismo intérprete.
 
-The virtual environment is optional — `python -m pip install --user legendary-gl` works too. If you
-skip the venv and your shell then cannot find the `legendary` command, the scripts fall back to
-running it through the same interpreter, so it still works.
+### 2. Conecta tu cuenta de Epic
 
-### 2. Connect your Epic account
-
-This is the one step that is yours rather than the repo's.
+Este es el único paso que depende de ti y no del repositorio — legendary necesita tu permiso para
+leer tu biblioteca, y eso implica un login interactivo en Epic. Los scripts nunca ven tu
+contraseña.
 
 ```sh
 legendary auth
 ```
 
-That opens Epic's login page. Log in, and legendary stores the token itself.
+Qué esperar:
 
-If the embedded browser is unavailable — common on servers and bare Linux installs — legendary
-falls back to asking for a code. You can also do that half manually:
+1. Se abre una pestaña con el login real de Epic (`epicgames.com` en la barra de direcciones).
+   Inicia sesión como siempre — email/usuario, contraseña, 2FA si lo usas.
+2. ¿No se abrió nada automáticamente? Ve a <https://legendary.gl/epiclogin> e inicia sesión ahí.
+3. Tras iniciar sesión, la pestaña redirige a una página de texto plano que empieza con `{` — eso
+   es correcto, no un error. Se ve así:
 
-1. Open **<https://legendary.gl/epiclogin>** in any browser and log into Epic.
-2. The page answers with a small blob of JSON containing an `authorizationCode` value.
-3. Hand that code over:
+   ```json
+   {"authorizationCode":"3b1a9f...", "expiresInSeconds":600, ...}
+   ```
+
+4. Selecciona todo (Ctrl+A / Cmd+A) y cópialo (Ctrl+C / Cmd+C) — el bloque completo, llaves
+   incluidas.
+5. Vuelve a la terminal, que está esperando ese texto, pégalo y pulsa Enter. legendary extrae el
+   código él mismo.
+
+El código caduca en pocos minutos; si al pegarlo falla, recarga la página de login para conseguir
+uno nuevo y repite desde el paso 3.
+
+¿Prefieres pasar el código directamente en vez de por ese prompt? Extrae solo el valor entre
+comillas que sigue a `"authorizationCode":` y ejecuta:
 
 ```sh
-legendary auth --code <authorization code>
+legendary auth --code <código de autorización>
 ```
 
-The code is single-use and expires within minutes, so grab it and paste it straight away. If it has
-already expired, reload the login URL for a fresh one.
-
-Already have the Epic Games Launcher installed and signed in? `legendary auth --import` takes the
-session from it instead — note that this signs the launcher itself out.
-
-Confirm it worked:
+¿Ya tienes el Epic Games Launcher instalado y con sesión iniciada? `legendary auth --import` toma
+la sesión de ahí (y cierra la sesión del launcher). Confirma con:
 
 ```sh
 legendary status
 ```
 
-It should print your Epic display name. Your credentials live in legendary's own config directory
-(`%USERPROFILE%\.config\legendary` on Windows, `~/.config/legendary` elsewhere) — never in this
-repository.
+Debería imprimir tu nombre de usuario de Epic. Las credenciales viven en el directorio de
+configuración de legendary (`%USERPROFILE%\.config\legendary` en Windows, `~/.config/legendary`
+en el resto) — nunca en este repositorio.
 
-### 3. Build the report
+### 3. Genera el informe
 
 ```sh
-python epic_steam.py      # library -> Steam data        -> out/games.json, out/games.csv
-python second_pass.py     # retry the titles that missed    (optional, recommended)
-python build_report.py    # render                       -> out/report.html
+python epic_steam.py      # biblioteca -> datos de Steam    -> out/games.json, out/games.csv
+python second_pass.py     # reintenta los títulos que fallaron (opcional, recomendado)
+python build_report.py    # genera                        -> out/report.html
 ```
 
-Then open `out/report.html` in a browser.
+La primera ejecución de `epic_steam.py` es lenta a propósito — Steam limita la tasa de peticiones,
+así que se regulan y cada respuesta se guarda en `cache/`. Las siguientes ejecuciones leen la
+caché y terminan en segundos.
 
-The first `epic_steam.py` run is slow on purpose: Steam's endpoints are rate limited, so requests
-are throttled and every response is written to `cache/`. Rerun it any time — it re-reads the cache
-and finishes in seconds.
-
-Flags for `epic_steam.py`:
-
-| Flag | Effect |
+| Flag | Efecto |
 |---|---|
-| `--refresh` | Re-query legendary instead of reusing the cached library dump |
-| `--no-hltb` | Skip the HowLongToBeat phase entirely |
+| `--refresh` | Vuelve a consultar legendary en vez de usar el volcado de biblioteca en caché |
+| `--no-hltb` | Omite por completo la fase de HowLongToBeat |
 
-## Reading the report
+## Leer el informe
 
-Everything is inside the one file: no server, no build step, no dependencies. Open it from disk,
-mail it to yourself, carry it on a stick. The only thing it asks the network for is its webfonts,
-and every rule names a system fallback, so offline it just looks slightly plainer.
+Un único archivo autocontenido: sin servidor, sin build, sin dependencias. Ábrelo desde el disco,
+envíalo por correo, llévalo en un USB — lo único que pide a la red son las tipografías web, y todo
+tiene una alternativa del sistema.
 
-**The filters stack.** The search box matches title, tag, developer and publisher; the status
-dropdown narrows by Steam listing; the *min reviews* slider steps through 0, 100, 500, 2,000,
-10,000 and 50,000, and opens at 100; Solo, Co-op and Controller keep only the games that declare
-support for them. **Reset** clears the lot. Sort from the dropdown or by clicking a column
-heading, and click it again to flip the direction.
+Los filtros se combinan: la búsqueda coincide con título, etiqueta, desarrollador y editor; el
+desplegable de estado filtra por catalogación en Steam; el control de reseñas mínimas avanza por
+0, 100, 500, 2.000, 10.000 y 50.000 (empieza en 100); y Solo, Cooperativo y Mando dejan solo los
+juegos que declaran ese soporte. **Reset** lo limpia todo. Ordena desde el desplegable o pulsando
+el encabezado de una columna; púlsalo de nuevo para invertir el orden.
 
-**Tags stack too, and they narrow.** Pick one from *Add a tag* and it becomes a chip under the
-filter bar; pick another and you get the games carrying **both**, not either. So *Action* plus
-*Open World* is the eleven open-world action games, not the hundred-odd that are one or the other.
-Each chip has an x, *Clear tags* drops them all at once, and a tag already added leaves the
-dropdown so it cannot be picked twice.
+Las etiquetas también se combinan y restringen: elegir dos etiquetas muestra los juegos que tienen
+**ambas**, no cualquiera de las dos — *Acción* más *Mundo abierto* son los once juegos de acción
+en mundo abierto, no el centenar que tiene una u otra. Cada chip tiene una x; *Clear tags* las
+quita todas de golpe.
 
-**English or Spanish.** The page opens in whichever language your browser asks for — on Windows
-that follows the system display language — and the `ES`/`EN` switch at the top right overrides it.
-The choice is remembered in that browser for next time. Switching translates the interface, Steam's
-tag names and its review tiers (*Very Positive* becomes *Muy positivas*), and reformats numbers
-and dates for the locale: 308,000 reviews become 308.000, 92.50% becomes 92,50 %, and the fetch
-date in the footer is written out the Spanish way. Titles, developers and publishers are left
-alone — they are names, not text. Filtering and sorting are unaffected: the tag dropdown and the
-chips show translated names but still match on what Steam actually sent, so switching language
-mid-filter keeps the same rows on screen. Steam has some four hundred
-tags and only the common ones are translated; the rest stay in English rather than disappear.
+La página se abre en el idioma de tu navegador (en Windows sigue el idioma del sistema); el
+interruptor `ES`/`EN` arriba a la derecha lo anula y recuerda tu elección. Cambiar de idioma
+traduce la interfaz, los nombres de etiquetas de Steam y sus niveles de reseña, y reformatea
+números y fechas según el idioma — los títulos, desarrolladores y editores se quedan igual porque
+son nombres propios. Filtrar y ordenar no se ven afectados por el idioma. Steam tiene unas 400
+etiquetas; solo las más comunes están traducidas, el resto se queda en inglés.
 
-## What lands where
+## Qué se genera
 
 ```
-out/report.html   the page you actually look at
-out/games.json    every field, one object per game
-out/games.csv     the same rows, for a spreadsheet
-cache/            one JSON file per appid (one GetItems call fans out into many),
-                  plus your library dump
+out/report.html   la página que realmente miras
+out/games.json    todos los campos, un objeto por juego
+out/games.csv     las mismas filas, para una hoja de cálculo
+cache/            un JSON por appid, más el volcado de tu biblioteca
 ```
 
-`out/` and `cache/` are both generated, and both are in `.gitignore` — your library never ends up in
-a commit, and a clone of this repo carries no one else's data. Delete either directory at any time;
-the scripts recreate what they need.
+`out/` y `cache/` se generan y están en `.gitignore` — tu biblioteca nunca termina en un commit.
+Puedes borrar cualquiera de las dos en cualquier momento; los scripts recrean lo que necesitan.
 
-## How a game gets its numbers
+## Cómo se calculan los números
 
-1. **Library** — `legendary list --json -T`, keeping entries whose Epic categories include `games`
-   or `software`. That drops the Unreal Engine assets, plugins and sample projects that share the
-   account, while keeping oddities like RPG in a Box that Epic files under software.
-2. **Match** — each title goes to `api.steampowered.com/IStoreQueryService/SearchSuggestions`,
-   which answers with the matching store items and their reviews, tags, categories, release
-   date and developer already attached. Results are ranked by how exactly the name matches
-   (exact, then edition-stripped, then substring), and anything that is not a base game — DLC,
-   a soundtrack, a demo — is rejected without a second request.
-3. **Second pass** — `second_pass.py` takes the titles that came back empty and walks a ladder of
-   looser queries: drop `(Beta)` markers, drop the subtitle, strip punctuation, split
-   `KillingFloor2Beta` into words. Matches are still name-checked before being accepted, and two
-   Epic entries that land on the same Steam page are de-duplicated.
-4. **Verdict** — anything still unmatched is looked up on PCGamingWiki. Steam's search only
-   answers for games it currently sells, so a delisted game and one that was never on Steam are
-   both simply absent from it; the wiki carries an article either way, with the Steam appid in
-   its infobox when there is one. That appid is enough, because `GetItems` keeps answering for a
-   pulled game long after the store stops offering it.
+1. **Biblioteca** — `legendary list --json -T`, quedándose con las entradas categorizadas como
+   `games` o `software` (descarta assets, plugins y proyectos de ejemplo de Unreal Engine,
+   conserva rarezas como RPG in a Box).
+2. **Match** — cada título consulta el endpoint `SearchSuggestions` de Steam, que devuelve los
+   productos coincidentes con reseñas, etiquetas, categorías, fecha de lanzamiento y desarrollador
+   ya incluidos. Los resultados se ordenan por cercanía del nombre (exacto, luego sin la edición,
+   luego subcadena); DLC, bandas sonoras y demos se descartan directamente.
+3. **Segunda pasada** — `second_pass.py` reintenta los que quedaron sin match con consultas más
+   laxas: quita `(Beta)`, quita el subtítulo, elimina puntuación, separa palabras pegadas. Los
+   resultados se siguen verificando por nombre; dos entradas de Epic que caen en la misma página
+   de Steam se fusionan.
+4. **Veredicto** — lo que sigue sin match se busca en PCGamingWiki, que cubre tanto los juegos
+   descatalogados como los que nunca estuvieron en Steam (la búsqueda de Steam solo conoce lo que
+   vende ahora mismo). El appid de Steam del wiki, cuando existe, basta — `GetItems` sigue
+   respondiendo para juegos retirados mucho después de que la tienda deje de listarlos.
 
-Review counts are Steam's filtered totals - the number its own store page shows.
-The report has no Metacritic column and no Steam genres, because the batched
-endpoints do not carry either; the Tags column stands in for genres.
+Los conteos de reseñas son los totales filtrados de Steam, el mismo número que muestra su propia
+página de tienda. No hay columna de Metacritic ni de géneros de Steam — los endpoints agrupados no
+traen ninguno de los dos, así que Tags hace las veces de género.
 
-## Why a game has no score
+## Por qué un juego no tiene puntuación
 
-Every row carries a `steam_status`, so a blank Steam column says which of these it is rather than
-lumping them together:
+Cada fila lleva un `steam_status`:
 
-| Status | Meaning |
+| Estado | Significado |
 |---|---|
-| `listed` | On sale on Steam now, or free to play |
-| `delisted` | Pulled from sale, but the page and its reviews survive — **scored and ranked like any other game**, since you still own it on Epic |
-| `not-on-steam` | PCGamingWiki has an article and it lists no Steam appid: it was never there |
-| `duplicate` | A second Epic entry for a game already in the list — a test branch, a beta, an edition — naming the row that holds the data |
-| `unreleased` | Steam has a page, dated in the future |
-| `unknown` | Nothing found either way |
+| `listed` | A la venta en Steam ahora, o gratuito |
+| `delisted` | Retirado de la venta, pero la página y sus reseñas sobreviven — **se puntúa y ordena con normalidad** |
+| `not-on-steam` | PCGamingWiki tiene artículo y no lista appid de Steam: nunca estuvo ahí |
+| `duplicate` | Una segunda entrada de Epic para un juego que ya está en la lista |
+| `unreleased` | Steam tiene página, con fecha futura |
+| `unknown` | No se encontró nada en ningún lado |
 
-Pick one from the **Any Steam status** dropdown in the report to see just those. Choosing a status
-lifts the *min reviews* floor for rows that have no reviews to count, so the categories that are
-blank by nature do not stay invisible.
+Elige un estado en el desplegable **Any Steam status** para ver solo esos — al hacerlo también se
+levanta el mínimo de reseñas, para que las categorías que por naturaleza no tienen reseñas no
+queden ocultas.
 
-Delisted games are not inferred any more: the store API marks a pulled title `unlisted`, and
-still hands over its page, its metadata and its reviews. An unannounced game is checked first,
-since it has nothing to sell either.
+`delisted` se lee directamente de la marca `unlisted` de la propia Steam, no se infiere. Un match
+por wiki es más débil que uno por búsqueda en Steam y se marca como tal — pasa el cursor sobre la
+insignia para ver a qué página de Steam corresponde; un nombre reutilizado puede, en ocasiones,
+coger la edición equivocada (el *Unreal Tournament* gratuito de Epic es el de 2014, y el artículo
+`Unreal Tournament` de PCGamingWiki es el de 1999).
 
-A wiki match is weaker than a Steam search hit and is marked as such — hover the badge to see which
-Steam page it landed on. Where a name is reused across releases it can pick the wrong one: Epic's
-free *Unreal Tournament* is the 2014 game, and PCGamingWiki's plain `Unreal Tournament` article is
-the 1999 one.
+## La puntuación de confianza
 
-## The confidence score
-
-Sorting by raw positive-review percentage puts *100% from 14 reviews* above *98% from 300,000*,
-which is exactly backwards for deciding what to play. The `sort_score` column is instead the
-**Wilson 95% lower bound** on the proportion of positive reviews:
+Ordenar por porcentaje de reseñas positivas puro pone *100% con 14 reseñas* por encima de *98% con
+300.000* — justo al revés de lo que interesa para elegir qué jugar. `sort_score` es en cambio el
+**límite inferior de Wilson al 95%** sobre la proporción de reseñas positivas:
 
 ```
          p + z²/2n - z·√( p(1-p)/n + z²/4n² )
@@ -234,67 +237,66 @@ score = ────────────────────────
                     1 + z²/n
 ```
 
-It starts at the raw rating and pulls downward the fewer reviews there are, so a handful of glowing
-reviews can no longer outrank a well-established favourite. Hades (98.01%, 308k reviews) barely
-moves, to 97.96. A game at 100% on 14 reviews lands near 78.
+Parte de la puntuación bruta y la reduce cuantas menos reseñas hay. Hades (98,01%, 308.000
+reseñas) apenas se mueve, a 97,96. Un juego al 100% con 14 reseñas queda cerca de 78.
 
-## Playtime
+## Tiempo de juego
 
-Not included. HowLongToBeat's search endpoint now rejects direct requests with
-`{"error":"Session expired or invalid fingerprint"}`, and this script does not forge a browser
-session to get around that. `epic_steam.py` probes once, logs that it is unavailable, and moves on;
-`build_report.py` drops the Hours column when no playtime data is present. If HLTB ever opens back
-up, both halves light up again with no code changes.
+No incluido. El endpoint de búsqueda de HowLongToBeat ahora rechaza las peticiones directas, y
+este proyecto no falsifica una sesión de navegador para sortearlo. `epic_steam.py` lo comprueba
+una vez, registra que no está disponible y sigue; `build_report.py` omite la columna de horas
+cuando no hay datos. Si HLTB vuelve a abrirse, ambas partes funcionan de nuevo sin cambiar código.
 
-## Troubleshooting
+## Solución de problemas
 
-**`Could not run legendary`** — it is not installed in the interpreter you are running. Rerun
-`python -m pip install -r requirements.txt` with the same `python` you use for the scripts.
+**`Could not run legendary`** — no está instalado en el intérprete que estás usando; vuelve a
+ejecutar `python -m pip install -r requirements.txt` con el mismo `python`.
 
-**`legendary could not list your library`** — almost always authentication. Run `legendary status`;
-if it does not show your display name, redo step 2.
+**`legendary could not list your library`** — casi siempre es autenticación. Ejecuta
+`legendary status`; si no muestra tu nombre de usuario, repite el
+[paso 2](#2-conecta-tu-cuenta-de-epic).
 
-**Lots of games with no Steam data** — if the network dropped mid-run, those failures are cached as
-`null` and will not be retried. Clear the remembered failures and run again:
+**Muchos juegos sin datos de Steam** — si la red falló a mitad de la ejecución, esos fallos quedan
+en caché como `null` y no se reintentan. Bórralos y vuelve a ejecutar:
 
 ```sh
 python -c "import json,glob,os; [os.remove(p) for p in glob.glob('cache/*.json') if json.load(open(p,encoding='utf-8')) is None]"
 ```
 
-**Stale review counts** — delete `cache/item_*.json` and rerun `epic_steam.py`. That refreshes each
-game's Steam data, reviews included, without re-resolving the whole library.
+**Conteos de reseñas desactualizados** — borra `cache/item_*.json` y vuelve a ejecutar
+`epic_steam.py`.
 
-**A game matched to the wrong Steam page** — delete the corresponding `cache/find_<title>.json`
-and rerun. Matching starts over for that title only.
+**Un juego emparejado con la página de Steam equivocada** — borra el `cache/find_<title>.json`
+correspondiente y vuelve a ejecutar; ese título se resuelve desde cero.
 
-**Garbled titles in the terminal** — the scripts switch stdout to UTF-8 on startup, but a terminal
-stuck on a legacy code page can still draw the glyphs wrong. It is cosmetic; `out/games.json` and
-the HTML report are UTF-8 regardless.
+**Títulos con caracteres extraños en la terminal** — es cosmético; stdout usa UTF-8, pero una
+terminal con una página de códigos antigua puede dibujar mal los glifos. `out/games.json` y el
+informe siempre están en UTF-8.
 
-## Files
+## Archivos
 
 ```
-run.bat           Windows one-click: environment, self-check, login, fetch, report
-epic_steam.py     phases 1-5: library -> match -> Steam -> playtime -> emit
-second_pass.py    retries unmatched titles, then settles delisted vs never-there
-pcgw.py           PCGamingWiki lookup: title -> Steam appid, for titles search hides
-steamstore.py     the Steam store API: search, batched lookup, item -> row
-build_report.py   renders out/games.json into a sortable HTML page, in English and Spanish
-steamlib.py       cached/throttled HTTP, name normalisation, Wilson score
-test_*.py         unit tests: matching, delisting, the report and its two languages
-requirements.txt  legendary-gl (the scripts themselves are standard library only)
+run.bat           un clic en Windows: entorno, autocomprobación, login, descarga, informe
+epic_steam.py     fases 1-5: biblioteca -> match -> Steam -> tiempo de juego -> salida
+second_pass.py    reintenta títulos sin match, luego decide descatalogado vs. nunca-estuvo
+pcgw.py           búsqueda en PCGamingWiki: título -> appid de Steam, para lo que la búsqueda no encuentra
+steamstore.py     la API de la tienda de Steam: búsqueda, consulta por lotes, item -> fila
+build_report.py   genera out/games.json como página HTML ordenable, en inglés y español
+steamlib.py       HTTP con caché y limitación, normalización de nombres, puntuación de Wilson
+test_*.py         pruebas unitarias: matching, descatalogados, el informe y sus dos idiomas
+requirements.txt  legendary-gl (los scripts en sí solo usan la biblioteca estándar)
 LICENSE           MIT
-docs/             the screenshot at the top of this README
-cache/            one JSON file per appid, not per response  (generated, git-ignored)
-out/              games.json, games.csv, report.html   (generated, git-ignored)
+docs/             la captura de pantalla de este README
+cache/            un JSON por appid, no por respuesta   (generado, en .gitignore)
+out/              games.json, games.csv, report.html   (generado, en .gitignore)
 ```
 
-Run the tests with `python -m unittest discover`. They touch no network and no cache of yours.
+Ejecuta las pruebas con `python -m unittest discover`. No tocan red ni tu caché.
 
-## License
+## Licencia
 
-[MIT](LICENSE). Do what you like with the code. What it fetches is not covered by that licence:
-the review numbers and store metadata are Valve's, and the article data is
-[PCGamingWiki's](https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights). Both are read
-through their public endpoints, at a rate their own limits allow, and cached locally rather than
-redistributed.
+[MIT](LICENSE) para el código. Lo que descarga no está cubierto por esa licencia: los números de
+reseñas y los metadatos de la tienda son de Valve, y los datos de artículos son de
+[PCGamingWiki](https://www.pcgamingwiki.com/wiki/PCGamingWiki:Copyrights). Ambos se leen a través
+de sus endpoints públicos, respetando sus límites de tasa, y se guardan en caché local en vez de
+redistribuirse.
