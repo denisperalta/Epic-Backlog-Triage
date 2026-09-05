@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Epic Backlog Triage</title>
+<meta name="description" content="Descarga el listado de tu biblioteca de Epic Games, lo cruza con las reseñas de Steam y arma un informe de una sola página ordenado por confianza. Corre 100% local.">
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+body{margin:0}
+a{color:var(--color-accent);text-underline-offset:3px}
+a:hover{color:var(--color-accent-2)}
+[data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+@keyframes epb-drift{0%{transform:translate(0,0)}50%{transform:translate(-18px,22px)}100%{transform:translate(0,0)}}
+@keyframes epb-pulse{0%,100%{opacity:.55}50%{opacity:.9}}
+@media (prefers-reduced-motion:reduce){[data-reveal]{opacity:1!important;transform:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div style="background:radial-gradient(1100px 640px at 84% -140px,color-mix(in srgb,var(--color-accent-900) 72%,transparent),transparent 60%),radial-gradient(1000px 720px at -8% 100%,color-mix(in srgb,black 30%,transparent),transparent 55%),var(--color-bg);color:var(--color-text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden">
+
+  <nav class="nav" style="max-width:1160px;margin:0 auto;padding:20px 24px">
+    <span class="nav-brand">Epic Backlog Triage</span>
+    <a href="#como-funciona" style="font-size:13px;white-space:nowrap">Cómo funciona</a>
+    <a href="#informe" style="font-size:13px;white-space:nowrap">El informe</a>
+    <a href="https://github.com/denisperalta/Epic-Backlog-Triage" target="_blank" rel="noopener" style="font-size:13px;white-space:nowrap">GitHub</a>
+    <a href="https://github.com/denisperalta/Epic-Backlog-Triage/archive/refs/heads/main.zip" class="btn btn-primary">Descargar</a>
+  </nav>
+
+  <section style="max-width:1160px;margin:0 auto;padding:64px 24px 40px;position:relative">
+    <div style="position:absolute;top:-40px;right:-60px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--color-accent) 22%,transparent),transparent 70%);filter:blur(10px);animation:epb-drift 16s ease-in-out infinite,epb-pulse 7s ease-in-out infinite;pointer-events:none;z-index:0"></div>
+    <div style="position:relative;z-index:1;max-width:680px">
+      <span style="display:inline-block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin-bottom:14px" data-reveal="1">Para tu biblioteca de Epic Games</span>
+      <h1 style="font-size:clamp(36px,5.4vw,58px);line-height:1.08;letter-spacing:-.02em;margin:0" data-reveal="1">Dejá de scrollear el launcher.<br>Empezá a jugar algo.</h1>
+      <p style="font-size:17px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 82%,transparent);max-width:56ch;margin:20px 0 0" data-reveal="1">
+        Este programa descarga el listado de tu propia biblioteca de Epic Games, lo cruza con las reseñas de Steam
+        y arma un informe de una sola página, ordenado de mejor a peor según la confianza de esas reseñas.
+        Todo corre en tu computadora — no hay servidor, no hay cuenta que crear, no hay nada ligado al autor original.
+      </p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:28px" data-reveal="1">
+        <a href="https://github.com/denisperalta/Epic-Backlog-Triage/archive/refs/heads/main.zip" class="btn btn-primary" style="font-size:15px;padding:12px 22px">Descargar .zip</a>
+        <a href="#como-funciona" class="btn btn-ghost" style="font-size:15px;padding:12px 18px">Ver cómo funciona</a>
+      </div>
+      <p style="font-size:13px;color:color-mix(in srgb,var(--color-text) 55%,transparent);margin-top:16px" data-reveal="1">
+        En Windows: descomprimí y hacé doble clic en <code style="font-family:ui-monospace,Menlo,monospace;background:var(--color-surface);padding:2px 6px;border-radius:4px">run.bat</code>. macOS y Linux usan tres comandos de terminal.
+      </p>
+    </div>
+  </section>
+
+  <section style="background:radial-gradient(900px 380px at 82% -30%,color-mix(in srgb,var(--color-section-glow) 70%,transparent),transparent 64%),var(--color-section);padding:48px 0;margin-top:24px">
+    <div style="max-width:1160px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:28px" data-reveal="1">
+      <div>
+        <p style="font-size:clamp(28px,3vw,38px);margin:0;letter-spacing:-.02em">100% local</p>
+        <p style="font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 64%,transparent);margin:8px 0 0">tu biblioteca nunca sale de tu PC</p>
+      </div>
+      <div>
+        <p style="font-size:clamp(28px,3vw,38px);margin:0;letter-spacing:-.02em">1 archivo</p>
+        <p style="font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 64%,transparent);margin:8px 0 0">informe HTML autocontenido, sin conexión</p>
+      </div>
+      <div>
+        <p style="font-size:clamp(28px,3vw,38px);margin:0;letter-spacing:-.02em">ES / EN</p>
+        <p style="font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 64%,transparent);margin:8px 0 0">se abre en el idioma de tu navegador</p>
+      </div>
+      <div>
+        <p style="font-size:clamp(28px,3vw,38px);margin:0;letter-spacing:-.02em">0 cuentas</p>
+        <p style="font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:color-mix(in srgb,var(--color-text) 64%,transparent);margin:8px 0 0">nada se crea ni se registra en ningún servicio</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="como-funciona" style="max-width:1160px;margin:0 auto;padding:72px 24px 40px">
+    <span style="display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin-bottom:28px" data-reveal="1">Cómo funciona</span>
+
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:20px 40px;padding:26px 0;border-top:1px solid var(--color-divider)" data-reveal="1">
+      <p style="font-size:14px;color:var(--color-accent);margin:0;font-family:var(--font-heading)">01</p>
+      <div>
+        <h3 style="font-size:22px;margin:0 0 8px">Conectá tu cuenta de Epic</h3>
+        <p style="font-size:15.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 80%,transparent);margin:0;max-width:60ch">
+          Un login normal en epicgames.com, de solo lectura: el programa solo pide el listado de tu biblioteca, nunca tu contraseña.
+          No usa ni depende de la cuenta del autor.
+        </p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:20px 40px;padding:26px 0;border-top:1px solid var(--color-divider)" data-reveal="1">
+      <p style="font-size:14px;color:var(--color-accent);margin:0;font-family:var(--font-heading)">02</p>
+      <div>
+        <h3 style="font-size:22px;margin:0 0 8px">Se cruza con Steam</h3>
+        <p style="font-size:15.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 80%,transparent);margin:0;max-width:60ch">
+          Cada título busca su página de Steam y trae reseñas, etiquetas y fecha de lanzamiento. Ordenar por porcentaje puro
+          favorece juegos con pocas reseñas — por eso el orden usa un cálculo estadístico (límite de Wilson) que pondera
+          reseñas confiables por sobre casos con muy pocos votos.
+        </p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:70px 1fr;gap:20px 40px;padding:26px 0;border-top:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider)" data-reveal="1">
+      <p style="font-size:14px;color:var(--color-accent);margin:0;font-family:var(--font-heading)">03</p>
+      <div>
+        <h3 style="font-size:22px;margin:0 0 8px">Abrís tu informe</h3>
+        <p style="font-size:15.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 80%,transparent);margin:0;max-width:60ch">
+          Una página que se abre sola al terminar: buscá, filtrá por género, estado en Steam o soporte de mando/cooperativo,
+          y ordená por cualquier columna. Podés volver a correrlo cuando quieras — las siguientes veces tardan segundos.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="informe" style="max-width:1160px;margin:0 auto;padding:64px 24px 24px;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center">
+    <div data-reveal="1">
+      <span style="display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent);margin-bottom:14px">El informe</span>
+      <h2 style="font-size:30px;line-height:1.2;letter-spacing:-.01em;margin:0 0 14px">Toda tu biblioteca, en una tabla</h2>
+      <p style="font-size:15.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 80%,transparent);margin:0;max-width:48ch">
+        Reseñas, etiquetas, año de lanzamiento y estado en Steam por juego. Los que fueron retirados de la tienda o
+        nunca estuvieron ahí también aparecen — se buscan aparte en PCGamingWiki, así que nada queda afuera solo
+        por no estar a la venta hoy.
+      </p>
+    </div>
+    <figure class="lighten elev-lg" style="margin:0;border-radius:var(--radius-lg);overflow:hidden" data-reveal="1">
+      <img src="assets/screenshot.png" alt="Informe con juegos de una biblioteca de Epic, ordenados por puntuación de confianza" style="width:100%;display:block">
+    </figure>
+  </section>
+
+  <hr class="hr" style="max-width:1160px;margin:56px auto">
+
+  <section style="max-width:1160px;margin:0 auto;padding:24px 24px 64px" data-reveal="1">
+    <h3 style="font-size:26px;margin:0 0 10px">Descargá y corré <code style="font-family:ui-monospace,Menlo,monospace;background:var(--color-surface);padding:2px 8px;border-radius:6px;font-size:20px">run.bat</code></h3>
+    <p style="font-size:15.5px;line-height:1.6;color:color-mix(in srgb,var(--color-text) 80%,transparent);margin:0 0 22px;max-width:60ch">
+      Requiere Python 3.8+ (se instala solo en Windows si falta) y unos minutos la primera vez — Steam limita las
+      consultas, así que las siguientes corridas leen de una caché local y tardan segundos.
+    </p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <a href="https://github.com/denisperalta/Epic-Backlog-Triage/archive/refs/heads/main.zip" class="btn btn-primary" style="font-size:15px;padding:12px 22px">Descargar .zip</a>
+      <a href="https://github.com/denisperalta/Epic-Backlog-Triage#readme" target="_blank" rel="noopener" class="btn btn-secondary" style="font-size:15px;padding:12px 18px">Leer las instrucciones completas</a>
+    </div>
+  </section>
+
+  <footer style="max-width:1160px;margin:0 auto;padding:28px 24px 40px;border-top:1px solid var(--color-divider);font-size:13px;color:color-mix(in srgb,var(--color-text) 55%,transparent);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <span>Código bajo licencia MIT. Reseñas y datos de tienda son de Valve y PCGamingWiki.</span>
+    <a href="https://github.com/denisperalta/Epic-Backlog-Triage" target="_blank" rel="noopener" style="font-size:13px">github.com/denisperalta/Epic-Backlog-Triage</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var els = document.querySelectorAll('[data-reveal]');
+  var reveal = function (el) { el.style.opacity = '1'; el.style.transform = 'none'; };
+  if (!('IntersectionObserver' in window)) { els.forEach(reveal); return; }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { reveal(e.target); io.unobserve(e.target); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  els.forEach(function (el) {
+    var r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) reveal(el);
+    else io.observe(el);
+  });
+})();
+</script>
+</body>
+</html>
